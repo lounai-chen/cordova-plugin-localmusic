@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-plugin-localmusic" version="1.0.0">
+  <name>LocalMusic</name>
+  <js-module name="LocalMusic" src="www/LocalMusic.js">
+    <clobbers target="LocalMusic"/>
+  </js-module>
+  <platform name="android">
+    <config-file parent="/*" target="res/xml/config.xml">
+      <feature name="LocalMusic">
+        <param name="android-package" value="org.apache.cordova.localMusic.LocalMusic"/>
+      </feature>
+    </config-file>
+            <config-file target="AndroidManifest.xml" parent="/*">
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+        </config-file>
+    <source-file src="src/android/LocalMusic.java" target-dir="src/org/apache/cordova/localMusic"/>
+  </platform>
+  <platform name="ios">
+    <config-file parent="/*" target="config.xml">
+      <feature name="LocalMusic">
+        <param name="ios-package" value="LocalMusic"/>
+      </feature>
+    </config-file>
+    <source-file src="src/ios/LocalMusic.h"/>
+    <source-file src="src/ios/LocalMusic.m"/>
+    <config-file parent="NSAppleMusicUsageDescription" target="*-Info.plist">
+        <string>是否允许访问您的媒体资料库？</string>
+    </config-file>
+  </platform>
+</plugin>
