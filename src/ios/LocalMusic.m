@@ -413,7 +413,7 @@
         [songDictionary setObject:albumTitle forKey:@"albumName"];
         [songDictionary setObject:artistTitle forKey:@"artistName"];
         [songDictionary setObject:duration forKey:@"duration"];
-        [songDictionary setObject:duration forKey:@"lyrics"];
+        [songDictionary setObject:lyrics forKey:@"lyrics"];
         [songDictionary setObject:url forKey:@"url"];
         //[songDictionary setObject:dataUrl forKey:@"data"]; // 可H5标签audio播放的路径
         [self.musicArray addObject: songDictionary];
