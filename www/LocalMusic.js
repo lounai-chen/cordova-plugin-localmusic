@@ -9,7 +9,7 @@ LocalMusic.prototype.getMusicList = function(
 ) {
   exec(successCallback, errorCallback, 'LocalMusic', 'getMusicList', [json]);
 };
-
+// 播放 、 暂停
 LocalMusic.prototype.playOrPause = function(
   successCallback,
   errorCallback,
@@ -18,7 +18,7 @@ LocalMusic.prototype.playOrPause = function(
 ) {
   exec(successCallback, errorCallback, 'LocalMusic', 'playOrPause', [index,isPlaying]);
 };
-
+//下一曲
 LocalMusic.prototype.nextSong = function(
   successCallback,
   errorCallback,
@@ -26,13 +26,30 @@ LocalMusic.prototype.nextSong = function(
 ) {
   exec(successCallback, errorCallback, 'LocalMusic', 'nextSong', [json]);
 };
-
+//上一曲
 LocalMusic.prototype.prevSong = function(
   successCallback,
   errorCallback,
   json
 ) {
   exec(successCallback, errorCallback, 'LocalMusic', 'prevSong', [json]);
+};
+
+//0顺序播放 1随机。2循环。
+LocalMusic.prototype.setSelectedSegmentIndexs = function(
+  successCallback,
+  errorCallback,
+  json
+) {
+  exec(successCallback, errorCallback, 'LocalMusic', 'setSelectedSegmentIndexs', [json]);
+};
+// 快进 or 后退
+LocalMusic.prototype.speedOrBack = function(
+  successCallback,
+  errorCallback,
+  json
+) {
+  exec(successCallback, errorCallback, 'LocalMusic', 'speedOrBack', [json]);
 };
 
 LocalMusic.prototype.getAlbums = function(
