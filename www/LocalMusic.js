@@ -10,6 +10,31 @@ LocalMusic.prototype.getMusicList = function(
   exec(successCallback, errorCallback, 'LocalMusic', 'getMusicList', [json]);
 };
 
+LocalMusic.prototype.playOrPause = function(
+  successCallback,
+  errorCallback,
+  index,
+  isPlaying
+) {
+  exec(successCallback, errorCallback, 'LocalMusic', 'playOrPause', [index,isPlaying]);
+};
+
+LocalMusic.prototype.nextSong = function(
+  successCallback,
+  errorCallback,
+  json
+) {
+  exec(successCallback, errorCallback, 'LocalMusic', 'nextSong', [json]);
+};
+
+LocalMusic.prototype.prevSong = function(
+  successCallback,
+  errorCallback,
+  json
+) {
+  exec(successCallback, errorCallback, 'LocalMusic', 'prevSong', [json]);
+};
+
 LocalMusic.prototype.getAlbums = function(
   successCallback,
   errorCallback,
