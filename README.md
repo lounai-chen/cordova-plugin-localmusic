@@ -1,5 +1,5 @@
 ### 前言  
-这是一个可以获取手机本地音乐文件的cordova插件
+这是一个可以获取手机本地音乐文件的cordova插件，可以后台播放，上一曲、下一曲
 ### 参考
 https://github.com/dongqishu/cordova-plugin-localmusic
 https://github.com/jasminpethani/cordova-plugin-musicplayer   
