@@ -29,7 +29,7 @@
 //音乐的下标
 @property (nonatomic, assign) NSInteger index;
 
-@property (nonatomic, assign) NSInteger selectedSegmentIndex; //  0) { //顺序播放
+@property (nonatomic, assign) NSInteger selectedSegmentIndex; //  0顺序播放  1随机  2单曲循环
 
 
 @end
@@ -196,7 +196,7 @@
         } else {
             self.index--;
         }
-    } else { //随机播放
+    } else  if (self.selectedSegmentIndex == 1){ //随机播放
         NSInteger index = arc4random() % self.musicArray.count;
         self.index = index;
     }
@@ -213,7 +213,7 @@
         } else {
             self.index++;
         }
-    } else { //随机播放
+    } else  if (self.selectedSegmentIndex == 1){ //随机播放
         NSInteger index = arc4random() % self.musicArray.count;
         self.index = index;
     }
@@ -341,17 +341,23 @@
     // 获取传来的参数
     self.index = [[command.arguments objectAtIndex:0] intValue];
     self.isPlaying = [command.arguments objectAtIndex:1];  // 当前需要的播放状态。1播放，0暂停
-    NSLog(@"播放、暂停...%d---%@",self.index,self.isPlaying);
+    //NSLog(@"播放、暂停...%d---%@",self.index,self.isPlaying);
     self.selectedSegmentIndex = 0; //顺序播放
     [self startClick];
 }
 
-// //0顺序播放
+// //0顺序播放 1随机。2循环。
 -(void)setSelectedSegmentIndexs:(CDVInvokedUrlCommand *)command{
   // 获取传来的参数
   self.selectedSegmentIndex  = [[command.arguments objectAtIndex:0] intValue];
+  // NSLog(@"%d",self.selectedSegmentIndex);
 }
 
+// 快进 or 后退
+-(void) speedOrBack:(CDVInvokedUrlCommand *)command{
+    NSLog(@"快进 or 后退.");
+    self.player.currentTime = [[command.arguments objectAtIndex:0] intValue];
+}
 
 // 下一曲
 -(void)nextSong:(CDVInvokedUrlCommand *)command{
