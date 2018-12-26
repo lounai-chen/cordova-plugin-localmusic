@@ -51,7 +51,14 @@ LocalMusic.prototype.speedOrBack = function(
 ) {
   exec(successCallback, errorCallback, 'LocalMusic', 'speedOrBack', [json]);
 };
-
+// 开启媒体按键监听 android
+LocalMusic.prototype.start = function(
+  successCallback,
+  errorCallback,
+  json
+) {
+  exec(successCallback, errorCallback, 'LocalMusic', 'start', [json]);
+};
 LocalMusic.prototype.getAlbums = function(
   successCallback,
   errorCallback,
