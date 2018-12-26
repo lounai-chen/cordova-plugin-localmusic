@@ -11,8 +11,12 @@
         <param name="android-package" value="org.apache.cordova.localMusic.LocalMusic"/>
       </feature>
     </config-file>
-            <config-file target="AndroidManifest.xml" parent="/*">
-            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+        <config-file target="AndroidManifest.xml" parent="/*">
+              <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+              <uses-permission android:name="android.permission.INTERNET"/>  
+              <uses-permission android:name="android.permission.BROADCAST_STICKY"/>  
+              <uses-permission android:name="android.permission.BLUETOOTH"/>  
+              <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/> 
         </config-file>
     <source-file src="src/android/LocalMusic.java" target-dir="src/org/apache/cordova/localMusic"/>
   </platform>
