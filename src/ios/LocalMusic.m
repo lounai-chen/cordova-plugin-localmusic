@@ -29,7 +29,7 @@
 //音乐的下标
 @property (nonatomic, assign) NSInteger index;
 
-@property (nonatomic, assign) NSInteger selectedSegmentIndex; //  0顺序播放  1随机  2单曲循环
+@property (nonatomic, assign) NSInteger selectedSegmentIndex=0; //  0顺序播放  1随机  2单曲循环
 
 
 @end
@@ -342,7 +342,6 @@
     self.index = [[command.arguments objectAtIndex:0] intValue];
     self.isPlaying = [command.arguments objectAtIndex:1];  // 当前需要的播放状态。1播放，0暂停
     //NSLog(@"播放、暂停...%d---%@",self.index,self.isPlaying);
-    self.selectedSegmentIndex = 0; //顺序播放
     [self startClick];
 }
 
