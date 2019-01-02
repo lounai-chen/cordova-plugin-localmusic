@@ -101,6 +101,7 @@ public class LocalMusic extends CordovaPlugin {
     }
     // 快进 or 后退
     else if("speedOrBack".equals(action)){
+       Log.e(null,args.getString(0));
        mMediaPlayer.seekTo(Integer.parseInt(args.getString(0)));
     }
     // 开启媒体按键监听 android
@@ -299,7 +300,9 @@ public class LocalMusic extends CordovaPlugin {
     mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
       @Override
       public void onCompletion(MediaPlayer mediaPlayer) {
-       nextMusic();
+        Log.e(null,"播放结束，自动下一曲");
+        isPlaying = "1";
+        nextMusic();
       }
     });
   }
