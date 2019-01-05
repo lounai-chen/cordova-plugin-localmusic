@@ -7,9 +7,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
+import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -18,6 +22,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowInsets;
 
+import com.duanqu.qupai.utils.BitmapUtil;
 import com.duntuo.SmartVoiceAPP.MainActivity;
 import com.duntuo.SmartVoiceAPP.R;
 
@@ -56,7 +61,7 @@ public class LocalMusic extends CordovaPlugin {
   final MediaPlayer mMediaPlayer = new MediaPlayer();
   private ArrayList<String> musicList;
   private String isPlaying;    // 1 正在播放
-  private int songIndex=0;    // 标记当前歌曲的序号
+  private long songId=0;    // 标记当前歌曲的序号
   private int selectedSegmentIndex=0; //  0 顺序播放  1 随机  2 单曲循环
   JSONArray allMusic = new JSONArray();
   private MediaSessionCompat mMediaSession;
@@ -82,10 +87,10 @@ public class LocalMusic extends CordovaPlugin {
     }
     //   播放 、 暂停
     else if("playOrPause".equals(action)){
-      songIndex =  Integer.parseInt(args.getString(0));
+      songId =  Integer.parseInt(args.getString(0));
       isPlaying =  args.getString(1);
-      Log.e(null,"第几首歌："+songIndex+" 播放暂停："+isPlaying);
-      playMusic();
+      Log.e(null,"第几首歌："+songId+" 播放暂停："+isPlaying);
+      playMusic(false);
     }
     //上一曲
     else if("prevSong".equals(action)){
@@ -93,7 +98,7 @@ public class LocalMusic extends CordovaPlugin {
     }
     //下一曲
     else if("nextSong".equals(action)){
-      nextMusic();
+      nextMusic(false);
     }
     // 0顺序播放 1随机。2循环。
     else if("setSelectedSegmentIndexs".equals(action)){
@@ -190,6 +195,7 @@ public class LocalMusic extends CordovaPlugin {
       int artistColumn = cursor.getColumnIndex(android.provider.MediaStore.Audio.Media.ARTIST);
       int durationColumn = cursor.getColumnIndex(android.provider.MediaStore.Audio.Media.DURATION);
       int dataColumn = cursor.getColumnIndex(android.provider.MediaStore.Audio.Media.DATA);
+      //int dataImgUrl = cursor.getColumnIndex(android.provider.MediaStore.Audio.Thumbnails);
 
       do {
         JSONObject music = new JSONObject();
@@ -202,6 +208,7 @@ public class LocalMusic extends CordovaPlugin {
           music.put("artistName", cursor.getString(artistColumn));
           music.put("duration", cursor.getLong(durationColumn));
           music.put("data", cursor.getString(dataColumn));
+          music.put("albumsImgUrl", MediaStore.Video.Thumbnails.getContentUri(cursor.getString(titleColumn)));
           allMusic.put(music);
           musicList.add(cursor.getString(dataColumn));
           Log.e( null ,music.getString("displayName"));
@@ -215,6 +222,35 @@ public class LocalMusic extends CordovaPlugin {
     cursor.close();
     return allMusic;
   }
+
+  /**
+   根据歌曲路径获得专辑封面
+   * @Description 获取专辑封面
+   * @param filePath 文件路径，like XXX/XXX/XX.mp3
+   * @return 专辑封面bitmap
+   */
+  public static Bitmap createAlbumArt(final String filePath) {
+    Bitmap bitmap = null;
+    //能够获取多媒体文件元数据的类
+    MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+    try {
+      retriever.setDataSource(filePath); //设置数据源
+      byte[] embedPic = retriever.getEmbeddedPicture(); //得到字节型数据
+      bitmap = BitmapFactory.decodeByteArray(embedPic, 0, embedPic.length); //转换为图片
+      //要优化后再加载
+      //bitmap=BitmapUtil.decodeBitmapByByteArray(embedPic,80,80);
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      try {
+        retriever.release();
+      } catch (Exception e2) {
+        e2.printStackTrace();
+      }
+    }
+    return bitmap;
+  }
+
 
   public JSONArray getJsonListOfAlbums(){
     ContentResolver contentResolver = this.cordova.getActivity().getContentResolver();
@@ -279,13 +315,13 @@ public class LocalMusic extends CordovaPlugin {
   /**
    * 播放\暂停音乐
    */
-  public void playMusic() {
+  public void playMusic(boolean isAutoNextPlay) {
     Log.e(null,"开始播放-暂停音乐"+isPlaying);
     if (isPlaying.equals("1")) {
       //如果还没开始播放，就开始
       Log.e(null,"开始播放");
       mMediaPlayer.reset();
-      iniMediaPlayerFile(songIndex);
+      iniMediaPlayerFile(songId);
       mMediaPlayer.start();
       isPlaying = "0";
     }
@@ -302,31 +338,34 @@ public class LocalMusic extends CordovaPlugin {
       public void onCompletion(MediaPlayer mediaPlayer) {
         Log.e(null,"播放结束，自动下一曲");
         isPlaying = "1";
-        nextMusic();
+        nextMusic(true);
       }
     });
+    if(isAutoNextPlay){
+      sendUpdate("1",true);
+    }
   }
 
 
   /**
    * 下一首
    */
-  public void nextMusic() {
+  public void nextMusic(boolean isAutoNextPlay) {
 
     if (mMediaPlayer != null) {
       if (selectedSegmentIndex == 0) { //顺序播放
-        if (songIndex >= musicList.size() - 1) {
-          songIndex = 0;
+        if (songId >= musicList.size() - 1) {
+          songId = 0;
         } else {
-          songIndex++;
+          songId++;
         }
       }
       else if (selectedSegmentIndex == 1) { //随机播放
         int max= musicList.size() - 1;
         Random random = new Random();
-        songIndex = random.nextInt(max)%(max+1);
+        songId = random.nextInt(max)%(max+1);
       }
-      playMusic();
+      playMusic(isAutoNextPlay);
     }
 
   }
@@ -338,19 +377,19 @@ public class LocalMusic extends CordovaPlugin {
 
     if (mMediaPlayer != null){
       if (selectedSegmentIndex == 0) { //顺序播放
-        if (songIndex <= 0) {
-          songIndex =  musicList.size() - 1;
+        if (songId <= 0) {
+          songId =  musicList.size() - 1;
         } else {
-          songIndex--;
+          songId--;
         }
       }
       else  if (selectedSegmentIndex == 1){ //随机播放
         int max= musicList.size() - 1;
         Random random = new Random();
-        songIndex = random.nextInt(max)%(max+1);
+        songId = random.nextInt(max)%(max+1);
       }
 
-      playMusic();
+      playMusic(false);
     }
   }
 
