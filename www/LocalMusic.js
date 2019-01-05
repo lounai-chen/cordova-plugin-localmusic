@@ -13,7 +13,7 @@ LocalMusic.prototype.getMusicList = function(
 LocalMusic.prototype.playOrPause = function(
   successCallback,
   errorCallback,
-  index,
+  id,
   isPlaying
 ) {
   exec(successCallback, errorCallback, 'LocalMusic', 'playOrPause', [index,isPlaying]);
