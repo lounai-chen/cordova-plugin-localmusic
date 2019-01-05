@@ -183,6 +183,7 @@ public class LocalMusic extends CordovaPlugin {
     Cursor cursor = contentResolver.query(ALL_SONGS_URI, null, (android.provider.MediaStore.Audio.Media.IS_MUSIC+" = ?"), new String[]{"1"}, null);
     allMusic = new JSONArray();
     musicList = new ArrayList<String>();   //音乐列表
+    musicIds = new ArrayList<String>();
     if (cursor == null){
 
     }else if (!cursor.moveToFirst()){
@@ -201,20 +202,22 @@ public class LocalMusic extends CordovaPlugin {
       do {
         JSONObject music = new JSONObject();
         try {
-          music.put("id", cursor.getLong(idColumn));
-          music.put("displayName", cursor.getString(titleColumn));
-          music.put("album_id", cursor.getLong(albumIdColumn));
-          music.put("albumName", cursor.getString(albumColumn));
-          music.put("artist_id", cursor.getLong(artistIdColumn));
-          music.put("artistName", cursor.getString(artistColumn));
-          music.put("duration", cursor.getLong(durationColumn));
-          music.put("data", cursor.getString(dataColumn));
-          music.put("albumsImgUrl", MediaStore.Video.Thumbnails.getContentUri(cursor.getString(titleColumn)));
-          allMusic.put(music);
-          musicList.add(cursor.getString(dataColumn));
-          musicIds.add(String.valueOf(cursor.getLong(idColumn)));
-          Log.e( null ,music.getString("displayName"));
-          Log.e( null ,music.getString("data"));
+          if(cursor.getLong(idColumn)>0){
+            music.put("id", cursor.getLong(idColumn));
+            music.put("displayName", cursor.getString(titleColumn));
+            music.put("album_id", cursor.getLong(albumIdColumn));
+            music.put("albumName", cursor.getString(albumColumn));
+            music.put("artist_id", cursor.getLong(artistIdColumn));
+            music.put("artistName", cursor.getString(artistColumn));
+            music.put("duration", cursor.getLong(durationColumn));
+            music.put("data", cursor.getString(dataColumn));
+            music.put("albumsImgUrl", MediaStore.Video.Thumbnails.getContentUri(cursor.getString(titleColumn)));
+            allMusic.put(music);
+            musicList.add(cursor.getString(dataColumn));
+            musicIds.add(Long.toString(cursor.getLong(idColumn)));
+            Log.e( null ,music.getString("displayName"));
+            Log.e( null ,music.getString("data"));
+          }
         } catch (JSONException e) {
           e.printStackTrace();
         }
@@ -416,7 +419,7 @@ public class LocalMusic extends CordovaPlugin {
       //设置音频文件到MediaPlayer对象中
       int song_index = 0;
       for(int i = 0; i < musicIds.size(); i++){
-        if( musicIds.get(i) ==  String.valueOf(songId)){
+        if( musicIds.get(i) ==  Long.toString(songId)){
           song_index = i;
         }
       }
