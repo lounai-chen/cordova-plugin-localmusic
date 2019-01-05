@@ -98,11 +98,13 @@ public class LocalMusic extends CordovaPlugin {
     else if("prevSong".equals(action)){
       isPlaying = "1";
       preciousMusic();
+      callbackContext.success(songId);
     }
     //下一曲
     else if("nextSong".equals(action)){
       isPlaying = "1";
       nextMusic(false);
+      callbackContext.success(songId);
     }
     // 0顺序播放 1随机。2循环。
     else if("setSelectedSegmentIndexs".equals(action)){
