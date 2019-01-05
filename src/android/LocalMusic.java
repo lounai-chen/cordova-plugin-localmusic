@@ -62,8 +62,9 @@ public class LocalMusic extends CordovaPlugin {
   private ArrayList<String> musicList;
   private ArrayList<String> musicIds;
   private String isPlaying;    // 1 正在播放
-  private long songId=0;    // 标记当前歌曲的序号
+  private String songId;    // 标记当前歌曲的序号
   private int selectedSegmentIndex=0; //  0 顺序播放  1 随机  2 单曲循环
+  private int songIndex;
   JSONArray allMusic = new JSONArray();
   private MediaSessionCompat mMediaSession;
   private CallbackContext BleButtonCallbackContext = null;
@@ -88,7 +89,7 @@ public class LocalMusic extends CordovaPlugin {
     }
     //   播放 、 暂停
     else if("playOrPause".equals(action)){
-      songId =  Integer.parseInt(args.getString(0));
+      songId =  args.getString(0);
       isPlaying =  args.getString(1);
       Log.e(null,"第几首歌："+songId+" 播放暂停："+isPlaying);
       playMusic(false);
@@ -359,16 +360,19 @@ public class LocalMusic extends CordovaPlugin {
 
     if (mMediaPlayer != null) {
       if (selectedSegmentIndex == 0) { //顺序播放
-        if (songId >= musicList.size() - 1) {
-          songId = 0;
+        if (songIndex >= musicList.size() - 1) {
+          songIndex = 0;
         } else {
-          songId++;
+          songIndex++;
         }
       }
       else if (selectedSegmentIndex == 1) { //随机播放
         int max= musicList.size() - 1;
         Random random = new Random();
-        songId = random.nextInt(max)%(max+1);
+        songIndex = random.nextInt(max)%(max+1);
+      }
+      for(int i = 0; i < musicIds.size(); i++) {
+        songId = musicIds.get(i);
       }
       playMusic(isAutoNextPlay);
     }
@@ -382,18 +386,20 @@ public class LocalMusic extends CordovaPlugin {
 
     if (mMediaPlayer != null){
       if (selectedSegmentIndex == 0) { //顺序播放
-        if (songId <= 0) {
-          songId =  musicList.size() - 1;
+        if (songIndex <= 0) {
+          songIndex =  musicList.size() - 1;
         } else {
-          songId--;
+          songIndex--;
         }
       }
       else  if (selectedSegmentIndex == 1){ //随机播放
         int max= musicList.size() - 1;
         Random random = new Random();
-        songId = random.nextInt(max)%(max+1);
+        songIndex = random.nextInt(max)%(max+1);
       }
-
+      for(int i = 0; i < musicIds.size(); i++) {
+        songId = musicIds.get(i);
+      }
       playMusic(false);
     }
   }
@@ -412,14 +418,14 @@ public class LocalMusic extends CordovaPlugin {
   /**
    * 添加file文件到MediaPlayer对象并且准备播放音频
    */
-  private void iniMediaPlayerFile(long dex) {
+  private void iniMediaPlayerFile(String idex) {
     //获取文件路径
     try {
       //此处的两个方法需要捕获IO异常
       //设置音频文件到MediaPlayer对象中
       int song_index = 0;
       for(int i = 0; i < musicIds.size(); i++){
-        if( musicIds.get(i) ==  Long.toString(songId)){
+        if( musicIds.get(i) ==  idex){
           song_index = i;
         }
       }
