@@ -60,6 +60,7 @@ public class LocalMusic extends CordovaPlugin {
 
   final MediaPlayer mMediaPlayer = new MediaPlayer();
   private ArrayList<String> musicList;
+  private ArrayList<String> musicIds;
   private String isPlaying;    // 1 正在播放
   private long songId=0;    // 标记当前歌曲的序号
   private int selectedSegmentIndex=0; //  0 顺序播放  1 随机  2 单曲循环
@@ -211,6 +212,7 @@ public class LocalMusic extends CordovaPlugin {
           music.put("albumsImgUrl", MediaStore.Video.Thumbnails.getContentUri(cursor.getString(titleColumn)));
           allMusic.put(music);
           musicList.add(cursor.getString(dataColumn));
+          musicIds.add(String.valueOf(cursor.getLong(idColumn)));
           Log.e( null ,music.getString("displayName"));
           Log.e( null ,music.getString("data"));
         } catch (JSONException e) {
@@ -407,13 +409,18 @@ public class LocalMusic extends CordovaPlugin {
   /**
    * 添加file文件到MediaPlayer对象并且准备播放音频
    */
-  private void iniMediaPlayerFile(int dex) {
+  private void iniMediaPlayerFile(long dex) {
     //获取文件路径
     try {
       //此处的两个方法需要捕获IO异常
       //设置音频文件到MediaPlayer对象中
-
-      String songPath =  musicList.get(dex);
+      int song_index = 0;
+      for(int i = 0; i < musicIds.size(); i++){
+        if( musicIds.get(i) ==  String.valueOf(songId)){
+          song_index = i;
+        }
+      }
+      String songPath =  musicList.get(song_index);
       Log.d(LOG_TAG , "播放路径");
       Log.e(null,songPath);
       mMediaPlayer.setDataSource(songPath);
