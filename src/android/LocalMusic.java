@@ -96,10 +96,12 @@ public class LocalMusic extends CordovaPlugin {
     }
     //上一曲
     else if("prevSong".equals(action)){
+      isPlaying = "1";
       preciousMusic();
     }
     //下一曲
     else if("nextSong".equals(action)){
+      isPlaying = "1";
       nextMusic(false);
     }
     // 0顺序播放 1随机。2循环。
@@ -372,7 +374,9 @@ public class LocalMusic extends CordovaPlugin {
         songIndex = random.nextInt(max)%(max+1);
       }
       for(int i = 0; i < musicIds.size(); i++) {
-        songId = musicIds.get(i);
+        if(songIndex == i){
+          songId = musicIds.get(i);
+        }
       }
       playMusic(isAutoNextPlay);
     }
@@ -398,7 +402,9 @@ public class LocalMusic extends CordovaPlugin {
         songIndex = random.nextInt(max)%(max+1);
       }
       for(int i = 0; i < musicIds.size(); i++) {
-        songId = musicIds.get(i);
+        if(songIndex == i){
+          songId = musicIds.get(i);
+        }
       }
       playMusic(false);
     }
@@ -425,8 +431,9 @@ public class LocalMusic extends CordovaPlugin {
       //设置音频文件到MediaPlayer对象中
       int song_index = 0;
       for(int i = 0; i < musicIds.size(); i++){
-        if( musicIds.get(i) ==  idex){
+        if( musicIds.get(i).equals(idex)){
           song_index = i;
+          songIndex = i;
         }
       }
       String songPath =  musicList.get(song_index);
