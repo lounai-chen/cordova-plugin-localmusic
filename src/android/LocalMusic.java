@@ -68,7 +68,7 @@ public class LocalMusic extends CordovaPlugin {
   JSONArray allMusic = new JSONArray();
   private MediaSessionCompat mMediaSession;
   private CallbackContext BleButtonCallbackContext = null;
-
+  public static final int SEEK_CLOSEST   = 0x03;
   public boolean execute(String action, JSONArray args,CallbackContext callbackContext) throws JSONException {
     //判断权限够不够，不够就给
     if (ContextCompat.checkSelfPermission(cordova.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -113,7 +113,9 @@ public class LocalMusic extends CordovaPlugin {
     // 快进 or 后退
     else if("speedOrBack".equals(action)){
        Log.e(null,args.getString(0));
-       mMediaPlayer.seekTo(Integer.parseInt(args.getString(0)));
+      mMediaPlayer.pause();
+      mMediaPlayer.seekTo(Integer.parseInt(args.getString(0)),SEEK_CLOSEST); //SEEK_CLOSEST
+      mMediaPlayer.start();
     }
     // 开启媒体按键监听 android
     if (action.equals("start")) {
@@ -351,9 +353,17 @@ public class LocalMusic extends CordovaPlugin {
         nextMusic(true);
       }
     });
-    if(isAutoNextPlay){
-      sendUpdate("1",true);
-    }
+
+    //播放跳转事件
+//    mMediaPlayer.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener(){
+//      @Override
+//      public void onSeekComplete(MediaPlayer mp) {
+//        //TODO: Your code here
+//        mMediaPlayer.start();
+//      }
+//    });
+
+
   }
 
 
@@ -381,6 +391,9 @@ public class LocalMusic extends CordovaPlugin {
         }
       }
       playMusic(isAutoNextPlay);
+      if(isAutoNextPlay){
+        sendUpdate(songId,true);
+      }
     }
 
   }
