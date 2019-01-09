@@ -29,7 +29,7 @@
 //音乐的下标
 @property (nonatomic, assign) NSInteger index;
 
-@property (nonatomic, assign) NSInteger selectedSegmentIndex=0; //  0顺序播放  1随机  2单曲循环
+@property (nonatomic, assign) NSInteger selectedSegmentIndex; //  0顺序播放  1随机  2单曲循环
 
 
 @end
@@ -200,6 +200,7 @@
         NSInteger index = arc4random() % self.musicArray.count;
         self.index = index;
     }
+    [self getCurrentSongId];
     [self loadMusic];
     [self.player play];
 }
@@ -217,9 +218,21 @@
         NSInteger index = arc4random() % self.musicArray.count;
         self.index = index;
     }
+    [self getCurrentSongId];
     [self loadMusic];
     [self.player play];
 }
+
+- (void) getCurrentSongId{
+    for(int i = 0; i < self.musicArray.count; i++){
+        NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[i]];
+        if(self.index == i){
+            self.songPId = [dir objectForKey:@"id"];
+            break;
+        }
+     }
+}
+
 #pragma mark - 播放结束调用的方法
 - (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
    // NSLog(@"播放结束、自动下一曲");
@@ -339,9 +352,31 @@
 // 播放 暂停
 -(void)playOrPause:(CDVInvokedUrlCommand *)command{
     // 获取传来的参数
-    self.index = [[command.arguments objectAtIndex:0] intValue];
+    self.songPId = [command.arguments objectAtIndex:0];
+//    for(int i=0;i<self.musicArray.count;i++){
+//        if(self.musicArray[i].id == @songid){
+//
+//        }
+//    }
+    Boolean isHave = NO;
+    for(int i = 0; i < self.musicArray.count; i++){
+        NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[i]];
+        if([self.songPId isEqualToString:[dir objectForKey:@"id"]]){
+            self.index = i;
+            isHave = YES;
+            break;
+        }
+    }
+    if(!isHave){
+        NSLog(@"error:队列中未找到歌曲%@",self.songPId);
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@":队列中未找到歌曲"];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    }
+
+    //self.index = [[command.arguments objectAtIndex:0] intValue];
     self.isPlaying = [command.arguments objectAtIndex:1];  // 当前需要的播放状态。1播放，0暂停
     //NSLog(@"播放、暂停...%d---%@",self.index,self.isPlaying);
+    self.selectedSegmentIndex = 0; //顺序播放
     [self startClick];
 }
 
@@ -362,12 +397,17 @@
 -(void)nextSong:(CDVInvokedUrlCommand *)command{
     NSLog(@"下一曲..");
     [self nextMusicClick];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:self.songPId];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 // 上一曲
 -(void)prevSong:(CDVInvokedUrlCommand *)command{
     NSLog(@"上一曲..");
     [self lastMusicClick];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:self.songPId];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+
 }
 
 
