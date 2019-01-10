@@ -9,7 +9,6 @@
 @interface LocalMusic : CDVPlugin<AVAudioPlayerDelegate,AVAudioPlayerDelegate,UITableViewDelegate, UIAlertViewDelegate> {
      NSString *callbackId_all;
 }
-//@interface LocalMusic ()<AVAudioPlayerDelegate,UITableViewDelegate,AVAudioPlayerDelegate>
 
 @property (nonatomic, retain) MPMusicPlayerController *musicPlayer;
 @property (strong, atomic) NSString *currendTrackId;
@@ -35,7 +34,6 @@
 @property (nonatomic, weak) NSString *isPlaying; // 1 正在播放
 //播放标记
 @property (nonatomic, weak) NSString *songPId; // 正在播放的歌曲ID
-@property (nonatomic, weak) NSString *callbackIds;
 
 //存储音乐url的数组
 @property (nonatomic, strong) NSMutableArray *musicArray;
@@ -44,6 +42,8 @@
 
 @property (nonatomic, assign) NSInteger selectedSegmentIndex; //  0顺序播放  1随机  2单曲循环
 
+@property (nonatomic,assign) NSTimeInterval  currentPlayTime; //当前音乐播放的时间
+@property (nonatomic,assign) BOOL  isPause;
 
 @end
 
@@ -151,15 +151,22 @@
 
 //开始播放按钮
 - (void)startClick {
-    if ([self.isPlaying isEqualToString:@"1"]) {
+    if ([self.isPlaying isEqualToString:@"1"] && ![self.player isPlaying]) {
         [self loadMusic];
         //准备播放, 可不写 为了规范要写.
         [self.player prepareToPlay];
         //播放
+        if(self.isPause){
+            self.player.currentTime = self.currentPlayTime;
+            self.isPause = NO;
+        }
         [self.player play];
         self.isPlaying = @"0";
         [self sendEvent:@"play"];
     } else {
+        self.currentPlayTime = self.player.currentTime;
+        NSLog(@"%f",self.currentPlayTime);
+        self.isPause = YES;
         [self.player pause];
         self.isPlaying = @"1";
         [self sendEvent:@"pause"];
@@ -174,8 +181,6 @@
     //转换时间格式
     NSString *curren = [self timeFormatted:self.player.currentTime];
     NSString *all = [self timeFormatted:self.player.duration];
-    //把时间拼接赋值给显示时间的label
-    //self.progressLabel.text = [NSString stringWithFormat:@"%@/%@",curren,all];
 }
 /** 拖动进度条 */
 - (IBAction)slideProgress:(UISlider *)sender {
@@ -200,6 +205,7 @@
 //上一曲
 - (void)lastMusicClick {
    // NSLog(@"%d",self.index);
+    self.currentPlayTime = 0;
     if (self.selectedSegmentIndex == 0) { //顺序播放
         if (self.index <= 0) {
             self.index = self.musicArray.count - 1;
@@ -213,14 +219,13 @@
     [self getCurrentSongId];
     [self loadMusic];
     [self.player play];
-    //CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:self.songPId];
-    //[self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackIds];
-     [self sendEvent:self.songPId];
+    [self sendEvent:self.songPId];
 }
 
 //下一曲
 - (void)nextMusicClick {
      //NSLog(@"%d",self.index);
+    self.currentPlayTime = 0;
     if (self.selectedSegmentIndex == 0) { //顺序播放
         if (self.index >= self.musicArray.count - 1) {
             self.index = 0;
@@ -234,8 +239,6 @@
     [self getCurrentSongId];
     [self loadMusic];
     [self.player play];
-//    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:self.songPId];
-//    [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackIds];
     [self sendEvent:self.songPId];
 }
 
@@ -253,7 +256,6 @@
 - (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
    // NSLog(@"播放结束、自动下一曲");
     [self nextMusicClick];
-    
     
     // 音频播放完成时，调用该方法。
     // 参数flag：如果音频播放无法解码时，该参数为NO。
@@ -327,13 +329,18 @@
 -(void)playOrPause:(CDVInvokedUrlCommand *)command{
     // 获取传来的参数
     [self.commandDelegate runInBackground:^{
-        //callbackId = command.callbackId;
         callbackId_all = command.callbackId;
         CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
         [result setKeepCallback:[NSNumber numberWithBool:YES]];
         [self.commandDelegate sendPluginResult:result callbackId:callbackId_all];
     }];
-    self.callbackIds = command.callbackId;
+    NSString *sid = [command.arguments objectAtIndex:0];
+    self.isPlaying = [command.arguments objectAtIndex:1];  // 当前需要的播放状态。1播放，0暂停
+    if(![sid isEqualToString:self.songPId]){
+        self.currentPlayTime = 0;
+        self.isPlaying = @"1";
+        [self.player pause];
+    }
     self.songPId = [command.arguments objectAtIndex:0];
     Boolean isHave = NO;
     for(int i = 0; i < self.musicArray.count; i++){
@@ -350,17 +357,13 @@
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }
 
-    //self.index = [[command.arguments objectAtIndex:0] intValue];
-    self.isPlaying = [command.arguments objectAtIndex:1];  // 当前需要的播放状态。1播放，0暂停
-    //NSLog(@"播放、暂停...%d---%@",self.index,self.isPlaying);
-    //self.selectedSegmentIndex = 0; //顺序播放
+    
     [self startClick];
 }
 
 // //0顺序播放 1随机。2循环。
 -(void)setSelectedSegmentIndexs:(CDVInvokedUrlCommand *)command{
   // 获取传来的参数
-  self.callbackIds = command.callbackId;
   self.selectedSegmentIndex  = [[command.arguments objectAtIndex:0] intValue];
   // NSLog(@"%d",self.selectedSegmentIndex);
 }
@@ -368,44 +371,36 @@
 // 快进 or 后退
 -(void) speedOrBack:(CDVInvokedUrlCommand *)command{
     NSLog(@"快进 or 后退.");
-    self.callbackIds = command.callbackId;
-    self.player.currentTime = [[command.arguments objectAtIndex:0] intValue];
+    [self.player pause];
+    double music_times = [[command.arguments objectAtIndex:0] doubleValue];
+    self.player.currentTime = music_times;
+    NSLog(@"%f",music_times);
+    [self.player play];
 }
 
 // 下一曲
 -(void)nextSong:(CDVInvokedUrlCommand *)command{
     NSLog(@"下一曲..");
     [self.commandDelegate runInBackground:^{
-        //callbackId = command.callbackId;
         callbackId_all = command.callbackId;
         CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
         [result setKeepCallback:[NSNumber numberWithBool:YES]];
         [self.commandDelegate sendPluginResult:result callbackId:callbackId_all];
     }];
-
-    //self.callbackIds = command.callbackId;
     [self nextMusicClick];
-    
-//    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:self.songPId];
-//    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 // 上一曲
 -(void)prevSong:(CDVInvokedUrlCommand *)command{
     NSLog(@"上一曲..");
     [self.commandDelegate runInBackground:^{
-        //callbackId = command.callbackId;
         callbackId_all = command.callbackId;
         CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
         [result setKeepCallback:[NSNumber numberWithBool:YES]];
         [self.commandDelegate sendPluginResult:result callbackId:callbackId_all];
     }];
 
-    //self.callbackIds = command.callbackId;
     [self lastMusicClick];
-//    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:self.songPId];
-//    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-
 }
 
 
@@ -419,15 +414,6 @@
     
     [self remoteControlEventHandler];
     
-    //监听蓝牙耳机的音量键盘 --  【按一下的情况】
-    //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(volumeClicked:) name:@"AVSystemController_SystemVolumeDidChangeNotification" object:nil];
-    
-    //监听暂停、播放、下一首、上一首
-    //[需要 AVAudioPlayer 方式播放才能监听到，而此方式播放的音乐是APP系统的资源文件，并不是手机上Itues的音乐文件]
-//    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
-//    [self.viewController becomeFirstResponder];
-    
-    
     MPMediaQuery *everything = [[MPMediaQuery alloc] init];
     NSArray *itemsFromGenericQuery = [everything items];
     NSMutableArray *allSongs = [[NSMutableArray alloc] init];
@@ -435,7 +421,7 @@
     for (MPMediaItem *song in itemsFromGenericQuery) {
         NSLog(@"%@",song.title);
         NSMutableDictionary *songDictionary = [[NSMutableDictionary alloc] init];
-        NSString *songId = [NSString stringWithFormat:@"%@", [song valueForProperty: MPMediaEntityPropertyPersistentID]];//[song valueForProperty:MPMediaEntityPropertyPersistentID]];
+        NSString *songId = [NSString stringWithFormat:@"%@", [song valueForProperty: MPMediaEntityPropertyPersistentID]];
         NSString *albumId = [NSString stringWithFormat:@"%@",[song valueForProperty:MPMediaItemPropertyAlbumPersistentID]];
         NSString *artistId = [NSString stringWithFormat:@"%@",[song valueForProperty:MPMediaItemPropertyArtistPersistentID]];
         NSString *songTitle = [song valueForProperty: MPMediaItemPropertyTitle];
