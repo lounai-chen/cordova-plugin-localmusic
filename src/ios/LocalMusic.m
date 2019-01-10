@@ -6,10 +6,20 @@
 #import <MediaPlayer/MPRemoteCommandCenter.h>
 #import <MediaPlayer/MPRemoteCommand.h>
 
-//@interface LocalMusic : CDVPlugin<AVAudioPlayerDelegate,AVAudioPlayerDelegate,UITableViewDelegate, UIAlertViewDelegate> {
-//     NSString *callbackId;
-//}
-@interface LocalMusic ()<AVAudioPlayerDelegate,UITableViewDelegate,AVAudioPlayerDelegate>
+@interface LocalMusic : CDVPlugin<AVAudioPlayerDelegate,AVAudioPlayerDelegate,UITableViewDelegate, UIAlertViewDelegate> {
+     NSString *callbackId_all;
+}
+//@interface LocalMusic ()<AVAudioPlayerDelegate,UITableViewDelegate,AVAudioPlayerDelegate>
+
+@property (nonatomic, retain) MPMusicPlayerController *musicPlayer;
+@property (strong, atomic) NSString *currendTrackId;
+
+
+-(void)getMusicList:(CDVInvokedUrlCommand *)command;
+-(void)getAlbums:(CDVInvokedUrlCommand *)command;
+-(void)getArtists:(CDVInvokedUrlCommand *)command;
+
+
 
 
 /** 音频播放器 */
@@ -50,11 +60,11 @@
 }
 
 - (void)sendEvent:(NSString *)dict {
-    if (!self.callbackIds) return;
+    if (!callbackId_all) return;
     
     CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:dict];
     [result setKeepCallback:[NSNumber numberWithBool:YES]];
-    [self.commandDelegate sendPluginResult:result callbackId:self.callbackIds];
+    [self.commandDelegate sendPluginResult:result callbackId:callbackId_all];
     
 }
 
@@ -148,10 +158,13 @@
         //播放
         [self.player play];
         self.isPlaying = @"0";
+        [self sendEvent:@"play"];
     } else {
         [self.player pause];
         self.isPlaying = @"1";
+        [self sendEvent:@"pause"];
     }
+    
 }
 
 /** 计时器调用的显示slider的方法 */
@@ -315,10 +328,10 @@
     // 获取传来的参数
     [self.commandDelegate runInBackground:^{
         //callbackId = command.callbackId;
-        self.callbackIds = command.callbackId;
+        callbackId_all = command.callbackId;
         CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
         [result setKeepCallback:[NSNumber numberWithBool:YES]];
-        [self.commandDelegate sendPluginResult:result callbackId:self.callbackIds];
+        [self.commandDelegate sendPluginResult:result callbackId:callbackId_all];
     }];
     self.callbackIds = command.callbackId;
     self.songPId = [command.arguments objectAtIndex:0];
@@ -340,7 +353,7 @@
     //self.index = [[command.arguments objectAtIndex:0] intValue];
     self.isPlaying = [command.arguments objectAtIndex:1];  // 当前需要的播放状态。1播放，0暂停
     //NSLog(@"播放、暂停...%d---%@",self.index,self.isPlaying);
-    self.selectedSegmentIndex = 0; //顺序播放
+    //self.selectedSegmentIndex = 0; //顺序播放
     [self startClick];
 }
 
@@ -364,10 +377,10 @@
     NSLog(@"下一曲..");
     [self.commandDelegate runInBackground:^{
         //callbackId = command.callbackId;
-        self.callbackIds = command.callbackId;
+        callbackId_all = command.callbackId;
         CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
         [result setKeepCallback:[NSNumber numberWithBool:YES]];
-        [self.commandDelegate sendPluginResult:result callbackId:self.callbackIds];
+        [self.commandDelegate sendPluginResult:result callbackId:callbackId_all];
     }];
 
     //self.callbackIds = command.callbackId;
@@ -382,10 +395,10 @@
     NSLog(@"上一曲..");
     [self.commandDelegate runInBackground:^{
         //callbackId = command.callbackId;
-        self.callbackIds = command.callbackId;
+        callbackId_all = command.callbackId;
         CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
         [result setKeepCallback:[NSNumber numberWithBool:YES]];
-        [self.commandDelegate sendPluginResult:result callbackId:self.callbackIds];
+        [self.commandDelegate sendPluginResult:result callbackId:callbackId_all];
     }];
 
     //self.callbackIds = command.callbackId;
