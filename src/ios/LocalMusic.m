@@ -6,9 +6,11 @@
 #import <MediaPlayer/MPRemoteCommandCenter.h>
 #import <MediaPlayer/MPRemoteCommand.h>
 
-
-
+//@interface LocalMusic : CDVPlugin<AVAudioPlayerDelegate,AVAudioPlayerDelegate,UITableViewDelegate, UIAlertViewDelegate> {
+//     NSString *callbackId;
+//}
 @interface LocalMusic ()<AVAudioPlayerDelegate,UITableViewDelegate,AVAudioPlayerDelegate>
+
 
 /** 音频播放器 */
 @property (nonatomic, strong) AVAudioPlayer *player;
@@ -23,6 +25,7 @@
 @property (nonatomic, weak) NSString *isPlaying; // 1 正在播放
 //播放标记
 @property (nonatomic, weak) NSString *songPId; // 正在播放的歌曲ID
+@property (nonatomic, weak) NSString *callbackIds;
 
 //存储音乐url的数组
 @property (nonatomic, strong) NSMutableArray *musicArray;
@@ -46,6 +49,14 @@
     return _musicArray;
 }
 
+- (void)sendEvent:(NSDictionary *)dict {
+    if (!self.callbackIds) return;
+    
+    CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:dict];
+    [result setKeepCallback:[NSNumber numberWithBool:YES]];
+    [self.commandDelegate sendPluginResult:result callbackId:self.callbackIds];
+    
+}
 
 - (BOOL)loadMusic {
     //创建一个错误对象,用来接收错误信息
@@ -221,6 +232,9 @@
     [self getCurrentSongId];
     [self loadMusic];
     [self.player play];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:self.songPId];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackIds];
+
 }
 
 - (void) getCurrentSongId{
@@ -396,9 +410,11 @@
 // 下一曲
 -(void)nextSong:(CDVInvokedUrlCommand *)command{
     NSLog(@"下一曲..");
+    self.callbackIds = command.callbackId;
     [self nextMusicClick];
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:self.songPId];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    
+//    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:self.songPId];
+//    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 // 上一曲
@@ -422,12 +438,12 @@
     [self remoteControlEventHandler];
     
     //监听蓝牙耳机的音量键盘 --  【按一下的情况】
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(volumeClicked:) name:@"AVSystemController_SystemVolumeDidChangeNotification" object:nil];
+    //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(volumeClicked:) name:@"AVSystemController_SystemVolumeDidChangeNotification" object:nil];
     
     //监听暂停、播放、下一首、上一首
     //[需要 AVAudioPlayer 方式播放才能监听到，而此方式播放的音乐是APP系统的资源文件，并不是手机上Itues的音乐文件]
-    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
-    [self.viewController becomeFirstResponder];
+//    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
+//    [self.viewController becomeFirstResponder];
     
     
     MPMediaQuery *everything = [[MPMediaQuery alloc] init];
@@ -437,7 +453,7 @@
     for (MPMediaItem *song in itemsFromGenericQuery) {
         NSLog(@"%@",song.title);
         NSMutableDictionary *songDictionary = [[NSMutableDictionary alloc] init];
-        NSString *songId = [NSString stringWithFormat:@"%@",[song valueForProperty:MPMediaEntityPropertyPersistentID]];
+        NSString *songId = [NSString stringWithFormat:@"%@", [song valueForProperty: MPMediaEntityPropertyPersistentID]];//[song valueForProperty:MPMediaEntityPropertyPersistentID]];
         NSString *albumId = [NSString stringWithFormat:@"%@",[song valueForProperty:MPMediaItemPropertyAlbumPersistentID]];
         NSString *artistId = [NSString stringWithFormat:@"%@",[song valueForProperty:MPMediaItemPropertyArtistPersistentID]];
         NSString *songTitle = [song valueForProperty: MPMediaItemPropertyTitle];
@@ -451,7 +467,7 @@
         //NSString *dataUrl = [[self convertToMp3:song] absoluteString]; //考虑到一次全部export过来，手机内存不够，故注释
         //NSString *dataUrl = nil;
       
-        [songDictionary setObject:songId forKey:@"id"];
+        [songDictionary setObject:song.title forKey:@"id"];  //id可能会有重复？
         [songDictionary setObject:albumId forKey:@"album_id"];
         [songDictionary setObject:artistId forKey:@"artist_id"];
         [songDictionary setObject:songTitle forKey:@"displayName"];
@@ -478,7 +494,8 @@
     NSArray *itemsFromGenericQuery = [everything items];
     NSMutableArray *allSongs = [[NSMutableArray alloc] init];
     for (MPMediaItem *song in itemsFromGenericQuery) {
-        NSString *songId = [NSString stringWithFormat:@"%@",[song valueForProperty:MPMediaEntityPropertyPersistentID]];
+        NSString *songId = song.title;// [song valueForProperty: MPMediaItemPropertyTitle];
+        //[NSString stringWithFormat:@"%@",[song valueForProperty:MPMediaEntityPropertyPersistentID]]; // [[song valueForProperty: MPMediaItemPropertyAssetURL] absoluteString];//[NSString stringWithFormat:@"%@",[song valueForProperty:MPMediaEntityPropertyPersistentID]];
         if([songId isEqualToString:ToSongId]){
             
                 NSURL *url = [song valueForProperty:MPMediaItemPropertyAssetURL];
