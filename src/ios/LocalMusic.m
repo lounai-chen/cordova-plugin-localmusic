@@ -39,7 +39,7 @@
 
 @implementation LocalMusic
 
-@synthesize musicPlayer, currendTrackId;
+
 
 -(NSMutableArray *)musicArray
 {
@@ -49,10 +49,10 @@
     return _musicArray;
 }
 
-- (void)sendEvent:(NSDictionary *)dict {
+- (void)sendEvent:(NSString *)dict {
     if (!self.callbackIds) return;
     
-    CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:dict];
+    CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:dict];
     [result setKeepCallback:[NSNumber numberWithBool:YES]];
     [self.commandDelegate sendPluginResult:result callbackId:self.callbackIds];
     
@@ -63,20 +63,6 @@
     NSError *error;
     //创建播放器对象 传入本地url
     if(self.musicArray.count > 0){
-//        Boolean isHave = NO;
-//        for(int i = 0; i < self.musicArray.count; i++){
-//            NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[i]];
-//            if([self.songPId isEqualToString:[dir objectForKey:@"id"]]){
-//                self.index = i;
-//                isHave = YES;
-//                break;
-//            }
-//        }
-//        if(!isHave){
-//            NSLog(@"error:队列中未找到歌曲%@",self.songPId);
-//            return NO;
-//        }
-        
         NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[self.index]];
         NSURL *soundUrl = [self convertToMp3:[dir objectForKey:@"id"]];
         //NSLog(@".........---路径：%@",soundUrl);
@@ -214,6 +200,9 @@
     [self getCurrentSongId];
     [self loadMusic];
     [self.player play];
+    //CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:self.songPId];
+    //[self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackIds];
+     [self sendEvent:self.songPId];
 }
 
 //下一曲
@@ -232,9 +221,9 @@
     [self getCurrentSongId];
     [self loadMusic];
     [self.player play];
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:self.songPId];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackIds];
-
+//    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:self.songPId];
+//    [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackIds];
+    [self sendEvent:self.songPId];
 }
 
 - (void) getCurrentSongId{
@@ -259,48 +248,6 @@
     // 和audioPlayerEndInterruption方法
     
 }
-
--(void)init:(CDVInvokedUrlCommand *)command{
-    musicPlayer = [MPMusicPlayerController systemMusicPlayer];
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:nil];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
--(void)currentTrackInfo:(CDVInvokedUrlCommand *)command{
-    NSMutableDictionary *trackInfo = [[NSMutableDictionary alloc] init];
-    
-    NSNumber *duration = [NSNumber numberWithDouble:(isnan(musicPlayer.currentPlaybackTime) ? 0.0 : musicPlayer.currentPlaybackTime*1000)];
-    [trackInfo setObject:duration forKey:@"currentPosition"];
-    
-    BOOL isPlaying = YES;
-    BOOL isPaused = NO;
-    if([musicPlayer playbackState] == MPMusicPlaybackStatePlaying){
-        isPlaying = YES;
-        isPaused = NO;
-    }else if([musicPlayer playbackState] == MPMusicPlaybackStatePaused || [musicPlayer playbackState]==MPMusicPlaybackStateInterrupted){
-        isPlaying = [[[musicPlayer nowPlayingItem] valueForKey:MPMediaItemPropertyPlaybackDuration] doubleValue] <= [duration doubleValue] ? YES : NO;
-        isPaused = YES;
-    }else{
-        isPlaying = NO;
-        isPaused = NO;
-    }
-    [trackInfo setValue:[NSNumber numberWithBool:isPlaying] forKey:@"isPlaying"];
-    [trackInfo setValue:[NSNumber numberWithBool:isPaused] forKey:@"isPaused"];
-    currendTrackId = [NSString stringWithFormat:@"%@",[[musicPlayer nowPlayingItem] valueForKey:MPMediaItemPropertyPersistentID]];
-    if (currendTrackId == nil) {
-        currendTrackId = @"-1";
-    }
-    [trackInfo setObject:currendTrackId forKey:@"id"];
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:trackInfo];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
--(void)volumeClicked:(NSNotification *)noti{
-    NSLog(@"音量变化..");
-    //在这里我们就可以实现对音量键进行监听，完成响应的操作。noti中也有一些相关的信息可以看看
-    
-}
-
 
 
 
@@ -366,12 +313,15 @@
 // 播放 暂停
 -(void)playOrPause:(CDVInvokedUrlCommand *)command{
     // 获取传来的参数
+    [self.commandDelegate runInBackground:^{
+        //callbackId = command.callbackId;
+        self.callbackIds = command.callbackId;
+        CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
+        [result setKeepCallback:[NSNumber numberWithBool:YES]];
+        [self.commandDelegate sendPluginResult:result callbackId:self.callbackIds];
+    }];
+    self.callbackIds = command.callbackId;
     self.songPId = [command.arguments objectAtIndex:0];
-//    for(int i=0;i<self.musicArray.count;i++){
-//        if(self.musicArray[i].id == @songid){
-//
-//        }
-//    }
     Boolean isHave = NO;
     for(int i = 0; i < self.musicArray.count; i++){
         NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[i]];
@@ -397,6 +347,7 @@
 // //0顺序播放 1随机。2循环。
 -(void)setSelectedSegmentIndexs:(CDVInvokedUrlCommand *)command{
   // 获取传来的参数
+  self.callbackIds = command.callbackId;
   self.selectedSegmentIndex  = [[command.arguments objectAtIndex:0] intValue];
   // NSLog(@"%d",self.selectedSegmentIndex);
 }
@@ -404,13 +355,22 @@
 // 快进 or 后退
 -(void) speedOrBack:(CDVInvokedUrlCommand *)command{
     NSLog(@"快进 or 后退.");
+    self.callbackIds = command.callbackId;
     self.player.currentTime = [[command.arguments objectAtIndex:0] intValue];
 }
 
 // 下一曲
 -(void)nextSong:(CDVInvokedUrlCommand *)command{
     NSLog(@"下一曲..");
-    self.callbackIds = command.callbackId;
+    [self.commandDelegate runInBackground:^{
+        //callbackId = command.callbackId;
+        self.callbackIds = command.callbackId;
+        CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
+        [result setKeepCallback:[NSNumber numberWithBool:YES]];
+        [self.commandDelegate sendPluginResult:result callbackId:self.callbackIds];
+    }];
+
+    //self.callbackIds = command.callbackId;
     [self nextMusicClick];
     
 //    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:self.songPId];
@@ -420,9 +380,18 @@
 // 上一曲
 -(void)prevSong:(CDVInvokedUrlCommand *)command{
     NSLog(@"上一曲..");
+    [self.commandDelegate runInBackground:^{
+        //callbackId = command.callbackId;
+        self.callbackIds = command.callbackId;
+        CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
+        [result setKeepCallback:[NSNumber numberWithBool:YES]];
+        [self.commandDelegate sendPluginResult:result callbackId:self.callbackIds];
+    }];
+
+    //self.callbackIds = command.callbackId;
     [self lastMusicClick];
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:self.songPId];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+//    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:self.songPId];
+//    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
 }
 
@@ -467,7 +436,7 @@
         //NSString *dataUrl = [[self convertToMp3:song] absoluteString]; //考虑到一次全部export过来，手机内存不够，故注释
         //NSString *dataUrl = nil;
       
-        [songDictionary setObject:song.title forKey:@"id"];  //id可能会有重复？
+        [songDictionary setObject:songId forKey:@"id"];
         [songDictionary setObject:albumId forKey:@"album_id"];
         [songDictionary setObject:artistId forKey:@"artist_id"];
         [songDictionary setObject:songTitle forKey:@"displayName"];
@@ -494,8 +463,7 @@
     NSArray *itemsFromGenericQuery = [everything items];
     NSMutableArray *allSongs = [[NSMutableArray alloc] init];
     for (MPMediaItem *song in itemsFromGenericQuery) {
-        NSString *songId = song.title;// [song valueForProperty: MPMediaItemPropertyTitle];
-        //[NSString stringWithFormat:@"%@",[song valueForProperty:MPMediaEntityPropertyPersistentID]]; // [[song valueForProperty: MPMediaItemPropertyAssetURL] absoluteString];//[NSString stringWithFormat:@"%@",[song valueForProperty:MPMediaEntityPropertyPersistentID]];
+        NSString *songId = [NSString stringWithFormat:@"%@",[song valueForProperty:MPMediaEntityPropertyPersistentID]];
         if([songId isEqualToString:ToSongId]){
             
                 NSURL *url = [song valueForProperty:MPMediaItemPropertyAssetURL];
@@ -636,37 +604,5 @@
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
--(void)playSong:(CDVInvokedUrlCommand *)command{
-    [musicPlayer play];
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:nil];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
--(void)pause:(CDVInvokedUrlCommand *)command{
-    [musicPlayer pause];
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:nil];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
--(void)resume:(CDVInvokedUrlCommand *)command{
-    [musicPlayer play];
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:nil];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
--(void)changeSong:(CDVInvokedUrlCommand *)command{
-    NSMutableDictionary* options = [command.arguments objectAtIndex:0];
-    NSString *songId = [options valueForKey:@"_id"];
-    MPMediaPropertyPredicate *predicate;
-    MPMediaQuery *songQuery;
-    currendTrackId = songId;
-    predicate = [MPMediaPropertyPredicate predicateWithValue: songId forProperty:MPMediaItemPropertyPersistentID comparisonType:MPMediaPredicateComparisonEqualTo];
-    songQuery = [[MPMediaQuery alloc] init];
-    [songQuery addFilterPredicate: predicate];
-    [musicPlayer setQueueWithQuery:songQuery];
-    [musicPlayer play];
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:nil];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
 
 @end
