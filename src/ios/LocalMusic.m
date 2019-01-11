@@ -336,7 +336,7 @@
     }];
     NSString *sid = [command.arguments objectAtIndex:0];
     self.isPlaying = [command.arguments objectAtIndex:1];  // 当前需要的播放状态。1播放，0暂停
-    if(![sid isEqualToString:self.songPId]){
+    if(![sid isEqualToString:self.songPId] && self.songPId){
         self.currentPlayTime = 0;
         self.isPlaying = @"1";
         [self.player pause];
