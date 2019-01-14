@@ -25,3 +25,9 @@ function getMusicList(){
 
 ### 注意事项
 安卓版本需要与插件cordova-plugin-android-permissions配合使用
+
+IOS后台播放，需要在.info文件中添加required background modes 配置 
+
+
+
+
