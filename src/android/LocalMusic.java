@@ -63,6 +63,8 @@ public class LocalMusic extends CordovaPlugin {
   private ArrayList<String> musicIds;
   private String isPlaying;    // 1 正在播放
   private String songId;    // 标记当前歌曲的序号
+  private String musicType;    //播放来源的类别 song 单曲，art 歌手，album 专辑
+  private String typeId;      //  musicType ！= song 。 typeid 表示的是artid, albumid
   private int selectedSegmentIndex=0; //  0 顺序播放  1 随机  2 单曲循环
   private int songIndex;
   JSONArray allMusic = new JSONArray();
@@ -97,12 +99,16 @@ public class LocalMusic extends CordovaPlugin {
     //上一曲
     else if("prevSong".equals(action)){
       isPlaying = "1";
+      musicType =  args.getString(0);
+      typeId =  args.getString(1);
       preciousMusic();
       callbackContext.success(songId);
     }
     //下一曲
     else if("nextSong".equals(action)){
       isPlaying = "1";
+      musicType =  args.getString(0);
+      typeId =  args.getString(1);
       nextMusic(false);
       callbackContext.success(songId);
     }
@@ -113,9 +119,9 @@ public class LocalMusic extends CordovaPlugin {
     // 快进 or 后退
     else if("speedOrBack".equals(action)){
        Log.e(null,args.getString(0));
-      mMediaPlayer.pause();
+      //mMediaPlayer.pause();
       mMediaPlayer.seekTo(Integer.parseInt(args.getString(0)),SEEK_CLOSEST); //SEEK_CLOSEST
-      mMediaPlayer.start();
+      //mMediaPlayer.start();
     }
     // 开启媒体按键监听 android
     if (action.equals("start")) {
@@ -373,21 +379,54 @@ public class LocalMusic extends CordovaPlugin {
   public void nextMusic(boolean isAutoNextPlay) {
 
     if (mMediaPlayer != null) {
+      int countMusicSize = allMusic.length();
+      if(musicType.equals("art")){
+        countMusicSize = 0;
+        try {
+          for (int i = 0; i < allMusic.length(); i++) {
+            JSONObject jsonObject = allMusic.getJSONObject(i);
+            String artist_id = jsonObject.getString("artist_id");
+            if( artist_id.equals(typeId)){
+              countMusicSize++;
+            }
+          }
+        } catch (JSONException e) {
+          e.printStackTrace();
+        }
+      } else  if(musicType.equals("album")){
+        countMusicSize = 0;
+        try {
+          for (int i = 0; i < allMusic.length(); i++) {
+            JSONObject jsonObject = allMusic.getJSONObject(i);
+            String artist_id = jsonObject.getString("album_id");
+            if( artist_id.equals(typeId)){
+              countMusicSize++;
+            }
+          }
+        } catch (JSONException e) {
+          e.printStackTrace();
+        }
+      }
       if (selectedSegmentIndex == 0) { //顺序播放
-        if (songIndex >= musicList.size() - 1) {
+        if (songIndex >= countMusicSize - 1) {
           songIndex = 0;
         } else {
           songIndex++;
         }
       }
       else if (selectedSegmentIndex == 1) { //随机播放
-        int max= musicList.size() - 1;
+        int max= countMusicSize - 1;
         Random random = new Random();
         songIndex = random.nextInt(max)%(max+1);
       }
-      for(int i = 0; i < musicIds.size(); i++) {
+      for(int i = 0; i <countMusicSize; i++) {
         if(songIndex == i){
-          songId = musicIds.get(i);
+          try {
+            songId = allMusic.getJSONObject(i).getString("id");
+            break;
+          }catch (JSONException e) {
+            e.printStackTrace();
+          }
         }
       }
       playMusic(isAutoNextPlay);
@@ -404,21 +443,55 @@ public class LocalMusic extends CordovaPlugin {
   public void preciousMusic() {
 
     if (mMediaPlayer != null){
+      int countMusicSize = allMusic.length();
+      if(musicType.equals("art")){
+        countMusicSize = 0;
+        try {
+          for (int i = 0; i < allMusic.length(); i++) {
+            JSONObject jsonObject = allMusic.getJSONObject(i);
+            String artist_id = jsonObject.getString("artist_id");
+            if( artist_id.equals(typeId)){
+              countMusicSize++;
+            }
+          }
+        } catch (JSONException e) {
+          e.printStackTrace();
+        }
+      } else  if(musicType.equals("album")){
+        countMusicSize = 0;
+        try {
+          for (int i = 0; i < allMusic.length(); i++) {
+            JSONObject jsonObject = allMusic.getJSONObject(i);
+            String artist_id = jsonObject.getString("album_id");
+            if( artist_id.equals(typeId)){
+              countMusicSize++;
+            }
+          }
+        } catch (JSONException e) {
+          e.printStackTrace();
+        }
+      }
+
       if (selectedSegmentIndex == 0) { //顺序播放
         if (songIndex <= 0) {
-          songIndex =  musicList.size() - 1;
+          songIndex = countMusicSize - 1;
         } else {
           songIndex--;
         }
       }
       else  if (selectedSegmentIndex == 1){ //随机播放
-        int max= musicList.size() - 1;
+        int max= countMusicSize - 1;
         Random random = new Random();
         songIndex = random.nextInt(max)%(max+1);
       }
-      for(int i = 0; i < musicIds.size(); i++) {
+      for(int i = 0; i < countMusicSize; i++) {
         if(songIndex == i){
-          songId = musicIds.get(i);
+          try {
+            songId = allMusic.getJSONObject(i).getString("id");
+            break;
+          }catch (JSONException e) {
+            e.printStackTrace();
+          }
         }
       }
       playMusic(false);
