@@ -18,21 +18,23 @@ LocalMusic.prototype.playOrPause = function(
 ) {
   exec(successCallback, errorCallback, 'LocalMusic', 'playOrPause', [id,isPlaying]);
 };
-//下一曲
+ //下一曲
 LocalMusic.prototype.nextSong = function(
   successCallback,
   errorCallback,
-  json
+  musicType,
+  typeId
 ) {
-  exec(successCallback, errorCallback, 'LocalMusic', 'nextSong', [json]);
+  exec(successCallback, errorCallback, 'LocalMusic', 'nextSong', [musicType,typeId]);
 };
 //上一曲
 LocalMusic.prototype.prevSong = function(
   successCallback,
   errorCallback,
-  json
+  musicType,
+  typeId
 ) {
-  exec(successCallback, errorCallback, 'LocalMusic', 'prevSong', [json]);
+  exec(successCallback, errorCallback, 'LocalMusic', 'prevSong', [musicType,typeId]);
 };
 
 //0顺序播放 1随机。2循环。
