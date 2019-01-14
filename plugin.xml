@@ -31,5 +31,8 @@
     <config-file parent="NSAppleMusicUsageDescription" target="*-Info.plist">
         <string>是否允许访问您的媒体资料库？</string>
     </config-file>
+     <config-file parent="required background modes" target="*-Info.plist">
+        <string>App plays audio or streams audio/video using AirPlay</string>
+    </config-file>
   </platform>
 </plugin>
