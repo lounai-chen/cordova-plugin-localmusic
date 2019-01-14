@@ -327,6 +327,11 @@
 
 // 播放 暂停
 -(void)playOrPause:(CDVInvokedUrlCommand *)command{
+    //后台监听暂停、播放、下一首、上一首
+    //[需要 AVAudioPlayer 方式播放才能监听到，而此方式播放的音乐是APP系统的资源文件，并不是手机上Itues的音乐文件]
+    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
+    [self.viewController becomeFirstResponder];
+
     // 获取传来的参数
     [self.commandDelegate runInBackground:^{
         callbackId_all = command.callbackId;
