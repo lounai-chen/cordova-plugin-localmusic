@@ -14,9 +14,11 @@ LocalMusic.prototype.playOrPause = function(
   successCallback,
   errorCallback,
   id,
-  isPlaying
+  isPlaying,
+  musicType,
+  typeId
 ) {
-  exec(successCallback, errorCallback, 'LocalMusic', 'playOrPause', [id,isPlaying]);
+  exec(successCallback, errorCallback, 'LocalMusic', 'playOrPause', [id,isPlaying,musicType,typeId]);
 };
  //下一曲
 LocalMusic.prototype.nextSong = function(
