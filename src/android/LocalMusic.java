@@ -428,7 +428,7 @@ public class LocalMusic extends CordovaPlugin {
               if(typeId.equals(allMusic.getJSONObject(i).getString("artist_id"))) {
                 if(countTypes == songIndex) {
                   songId = allMusic.getJSONObject(i).getString("id");
-                  Log.e(null,allMusic.getJSONObject(i).getString("displayName"));
+                  //Log.e(null,allMusic.getJSONObject(i).getString("displayName"));
                   break;
                 }
                 countTypes++;
@@ -437,10 +437,14 @@ public class LocalMusic extends CordovaPlugin {
               if(typeId.equals(allMusic.getJSONObject(i).getString("album_id"))) {
                 if(countTypes == songIndex) {
                   songId = allMusic.getJSONObject(i).getString("id");
-                  Log.e(null,allMusic.getJSONObject(i).getString("displayName"));
                   break;
                 }
                 countTypes++;
+              }
+            } else if(musicType.equals("song")) {
+              if(songIndex == i){
+                songId = allMusic.getJSONObject(i).getString("id");
+                break;
               }
             }
           }catch (JSONException e) {
@@ -523,6 +527,11 @@ public class LocalMusic extends CordovaPlugin {
                 break;
               }
               countTypes++;
+            }
+          } else if(musicType.equals("song")) {
+            if(songIndex == i){
+              songId = allMusic.getJSONObject(i).getString("id");
+              break;
             }
           }
         }catch (JSONException e) {
