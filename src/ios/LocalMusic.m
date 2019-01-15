@@ -80,12 +80,11 @@
         NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[tempIndex]];
         NSURL *soundUrl = [self convertToMp3:[dir objectForKey:@"id"]];
         for(int i = 0; i < self.musicArray.count; i++){
-            NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[i]];
+            dir = [NSDictionary dictionaryWithDictionary:self.musicArray[i]];
             NSString *songid = [dir objectForKey:@"id"];
             if([songid isEqualToString:self.songPId]){
                 NSLog(@"%@",[dir objectForKey:@"displayName"]);
                 tempIndex = i;
-                dir = [NSDictionary dictionaryWithDictionary:self.musicArray[tempIndex]];
                 soundUrl = [self convertToMp3:[dir objectForKey:@"id"]];
                 break;
             }
