@@ -63,7 +63,7 @@ public class LocalMusic extends CordovaPlugin {
   private ArrayList<String> musicIds;
   private String isPlaying;    // 1 正在播放
   private String songId;    // 标记当前歌曲的序号
-  private String musicType;    //播放来源的类别 song 单曲，art 歌手，album 专辑
+  private String musicType="song";    //播放来源的类别 song 单曲，art 歌手，album 专辑
   private String typeId;      //  musicType ！= song 。 typeid 表示的是artid, albumid
   private int selectedSegmentIndex=0; //  0 顺序播放  1 随机  2 单曲循环
   private int songIndex;
@@ -93,6 +93,8 @@ public class LocalMusic extends CordovaPlugin {
     else if("playOrPause".equals(action)){
       songId =  args.getString(0);
       isPlaying =  args.getString(1);
+      musicType =  args.getString(2);
+      typeId =  args.getString(3);
       Log.e(null,"第几首歌："+songId+" 播放暂停："+isPlaying);
       playMusic(false);
     }
@@ -381,11 +383,11 @@ public class LocalMusic extends CordovaPlugin {
     if (mMediaPlayer != null) {
       int countMusicSize = allMusic.length();
       if(musicType.equals("art")){
-        countMusicSize = 0;
         try {
+          countMusicSize = 0;
           for (int i = 0; i < allMusic.length(); i++) {
             JSONObject jsonObject = allMusic.getJSONObject(i);
-            String artist_id = jsonObject.getString("artist_id");
+            String artist_id = jsonObject.getString("artist_id"); //歌手
             if( artist_id.equals(typeId)){
               countMusicSize++;
             }
@@ -394,11 +396,11 @@ public class LocalMusic extends CordovaPlugin {
           e.printStackTrace();
         }
       } else  if(musicType.equals("album")){
-        countMusicSize = 0;
         try {
+          countMusicSize = 0;
           for (int i = 0; i < allMusic.length(); i++) {
             JSONObject jsonObject = allMusic.getJSONObject(i);
-            String artist_id = jsonObject.getString("album_id");
+            String artist_id = jsonObject.getString("album_id"); //专辑
             if( artist_id.equals(typeId)){
               countMusicSize++;
             }
@@ -419,15 +421,31 @@ public class LocalMusic extends CordovaPlugin {
         Random random = new Random();
         songIndex = random.nextInt(max)%(max+1);
       }
-      for(int i = 0; i <countMusicSize; i++) {
-        if(songIndex == i){
+      int countTypes = 0;
+      for(int i = 0; i <allMusic.length(); i++) {
           try {
-            songId = allMusic.getJSONObject(i).getString("id");
-            break;
+            if(musicType.equals("art")) {
+              if(typeId.equals(allMusic.getJSONObject(i).getString("artist_id"))) {
+                if(countTypes == songIndex) {
+                  songId = allMusic.getJSONObject(i).getString("id");
+                  Log.e(null,allMusic.getJSONObject(i).getString("displayName"));
+                  break;
+                }
+                countTypes++;
+              }
+            } else if(musicType.equals("album")) {
+              if(typeId.equals(allMusic.getJSONObject(i).getString("album_id"))) {
+                if(countTypes == songIndex) {
+                  songId = allMusic.getJSONObject(i).getString("id");
+                  Log.e(null,allMusic.getJSONObject(i).getString("displayName"));
+                  break;
+                }
+                countTypes++;
+              }
+            }
           }catch (JSONException e) {
             e.printStackTrace();
           }
-        }
       }
       playMusic(isAutoNextPlay);
       if(isAutoNextPlay){
@@ -484,16 +502,34 @@ public class LocalMusic extends CordovaPlugin {
         Random random = new Random();
         songIndex = random.nextInt(max)%(max+1);
       }
-      for(int i = 0; i < countMusicSize; i++) {
-        if(songIndex == i){
-          try {
-            songId = allMusic.getJSONObject(i).getString("id");
-            break;
-          }catch (JSONException e) {
-            e.printStackTrace();
+      // 从歌手处播放
+      int countTypes = 0;
+      for(int i = 0; i <allMusic.length(); i++) {
+        try {
+          if(musicType.equals("art")) {
+            if(typeId.equals(allMusic.getJSONObject(i).getString("artist_id"))) {
+              if(countTypes == songIndex) {
+                songId = allMusic.getJSONObject(i).getString("id");
+                Log.e(null,allMusic.getJSONObject(i).getString("displayName"));
+                break;
+              }
+              countTypes++;
+            }
+          } else if(musicType.equals("album")) {
+            if(typeId.equals(allMusic.getJSONObject(i).getString("album_id"))) {
+              if(countTypes == songIndex) {
+                songId = allMusic.getJSONObject(i).getString("id");
+                Log.e(null,allMusic.getJSONObject(i).getString("displayName"));
+                break;
+              }
+              countTypes++;
+            }
           }
+        }catch (JSONException e) {
+          e.printStackTrace();
         }
       }
+
       playMusic(false);
     }
   }
@@ -518,13 +554,46 @@ public class LocalMusic extends CordovaPlugin {
       //此处的两个方法需要捕获IO异常
       //设置音频文件到MediaPlayer对象中
       int song_index = 0;
+      int count_type = 0;
+      String songPath =  musicList.get(song_index);
       for(int i = 0; i < musicIds.size(); i++){
         if( musicIds.get(i).equals(idex)){
           song_index = i;
-          songIndex = i;
+          if(musicType.equals("song")) {
+            songIndex = i;
+            songPath =  musicList.get(song_index);
+          }
         }
       }
-      String songPath =  musicList.get(song_index);
+      // 从歌手和专辑列表
+      for(int i =0; i < allMusic.length();i++){
+        try {
+          String song_id = allMusic.getJSONObject(i).getString("id");
+          if(musicType.equals("art")){
+            String artist_id = allMusic.getJSONObject(i).getString("artist_id");
+            if(artist_id.equals(typeId)){
+              if(song_id.equals(idex)){
+                songIndex = count_type;
+                songPath =  musicList.get(song_index);
+                break;
+              }
+              count_type++;
+            }
+          } else if(musicType.equals("album")){
+            String album_id = allMusic.getJSONObject(i).getString("album_id");
+            if(album_id.equals(typeId)){
+              if(song_id.equals(idex)){
+                songIndex = count_type;
+                songPath =  musicList.get(song_index);
+                break;
+              }
+              count_type++;
+            }
+          }
+        } catch(JSONException e) {
+          e.printStackTrace();
+        }
+      }
       Log.d(LOG_TAG , "播放路径");
       Log.e(null,songPath);
       mMediaPlayer.setDataSource(songPath);
