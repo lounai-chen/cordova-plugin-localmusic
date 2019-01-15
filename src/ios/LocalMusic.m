@@ -423,6 +423,8 @@
     }];
     NSString *sid = [command.arguments objectAtIndex:0];
     self.isPlaying = [command.arguments objectAtIndex:1];  // 当前需要的播放状态。1播放，0暂停
+    self.musicType = [command.arguments objectAtIndex:2];
+    self.typeId = [command.arguments objectAtIndex:3];
     if(![sid isEqualToString:self.songPId] && self.songPId){
         self.currentPlayTime = 0;
         self.isPlaying = @"1";
@@ -433,9 +435,40 @@
     for(int i = 0; i < self.musicArray.count; i++){
         NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[i]];
         if([self.songPId isEqualToString:[dir objectForKey:@"id"]]){
-            self.index = i;
+            if([self.musicType isEqualToString:@"song"]){
+                self.index = i;
+            }
             isHave = YES;
             break;
+        }
+    }
+    // 兼容从歌手、专辑列表来的播放
+    long countMusic = 0;
+    if([self.musicType isEqualToString:@"art"]){
+        countMusic = 0;
+        for(int i = 0; i < self.musicArray.count; i++){
+            NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[i]];
+            NSString *artist_id = [dir objectForKey:@"artist_id"];
+            if([artist_id isEqualToString:self.typeId]){
+                if([self.songPId isEqualToString:[dir objectForKey:@"id"]]){
+                    self.index = countMusic;
+                    break;
+                }
+                countMusic++;
+            }
+        }
+    } else if([self.musicType isEqualToString:@"album"]){
+        countMusic = 0;
+        for(int i = 0; i < self.musicArray.count; i++){
+            NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[i]];
+            NSString *album_id = [dir objectForKey:@"album_id"];
+            if([album_id isEqualToString:self.typeId]){
+                if([self.songPId isEqualToString:[dir objectForKey:@"id"]]){
+                    self.index = countMusic;
+                    break;
+                }
+                countMusic++;
+            }
         }
     }
     if(!isHave){
@@ -585,7 +618,7 @@
                 }
                 else {
                     NSLog(@"文件不存在:%@",filePath);
-                    
+                    self.songPId = ToSongId;
                         [exporter exportAsynchronouslyWithCompletionHandler:^{
                             NSData *data1 = [NSData dataWithContentsOfFile:exportFile];
                             //NSLog(@"==================data1:%@",data1);
@@ -603,6 +636,7 @@
                                 case AVAssetExportSessionStatusCompleted: {
                                     NSLog(@"AVAssetExportSessionStatusCompleted");
                                     //export完成后，重新调用播放
+                                    self.isPlaying = @"1";
                                     [self startClick];
                                     break;
                                 }
