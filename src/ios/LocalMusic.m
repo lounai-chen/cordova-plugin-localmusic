@@ -34,6 +34,9 @@
 @property (nonatomic, weak) NSString *isPlaying; // 1 正在播放
 //播放标记
 @property (nonatomic, weak) NSString *songPId; // 正在播放的歌曲ID
+//播放来源的类别
+@property (nonatomic, weak) NSString *musicType; // song单曲、art 歌手、 album 专辑
+@property (nonatomic, weak) NSString *typeId;
 
 //存储音乐url的数组
 @property (nonatomic, strong) NSMutableArray *musicArray;
@@ -73,8 +76,21 @@
     NSError *error;
     //创建播放器对象 传入本地url
     if(self.musicArray.count > 0){
-        NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[self.index]];
+        int tempIndex = 0;
+        NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[tempIndex]];
         NSURL *soundUrl = [self convertToMp3:[dir objectForKey:@"id"]];
+        for(int i = 0; i < self.musicArray.count; i++){
+            NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[i]];
+            NSString *songid = [dir objectForKey:@"id"];
+            if([songid isEqualToString:self.songPId]){
+                NSLog(@"%@",[dir objectForKey:@"displayName"]);
+                tempIndex = i;
+                dir = [NSDictionary dictionaryWithDictionary:self.musicArray[tempIndex]];
+                soundUrl = [self convertToMp3:[dir objectForKey:@"id"]];
+                break;
+            }
+        }
+       
         //NSLog(@".........---路径：%@",soundUrl);
         if(!soundUrl){
             return NO;
@@ -205,15 +221,35 @@
 //上一曲
 - (void)lastMusicClick {
    // NSLog(@"%d",self.index);
+    int countMusic = self.musicArray.count;
+    if([self.musicType isEqualToString:@"art"]){
+        countMusic = 0;
+        for(int i = 0; i < self.musicArray.count; i++){
+            NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[i]];
+            NSString *artist_id = [dir objectForKey:@"artist_id"];
+            if([artist_id isEqualToString:self.typeId]){
+                countMusic++;
+            }
+        }
+    } else if([self.musicType isEqualToString:@"album"]){
+        countMusic = 0;
+        for(int i = 0; i < self.musicArray.count; i++){
+            NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[i]];
+            NSString *album_id = [dir objectForKey:@"album_id"];
+            if([album_id isEqualToString:self.typeId]){
+                countMusic++;
+            }
+        }
+    }
     self.currentPlayTime = 0;
     if (self.selectedSegmentIndex == 0) { //顺序播放
         if (self.index <= 0) {
-            self.index = self.musicArray.count - 1;
+            self.index = countMusic - 1;
         } else {
             self.index--;
         }
     } else  if (self.selectedSegmentIndex == 1){ //随机播放
-        NSInteger index = arc4random() % self.musicArray.count;
+        NSInteger index = arc4random() % countMusic;
         self.index = index;
     }
     [self getCurrentSongId];
@@ -225,15 +261,35 @@
 //下一曲
 - (void)nextMusicClick {
      //NSLog(@"%d",self.index);
+    int countMusic = self.musicArray.count;
+    if([self.musicType isEqualToString:@"art"]){
+        countMusic = 0;
+        for(int i = 0; i < self.musicArray.count; i++){
+            NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[i]];
+            NSString *artist_id = [dir objectForKey:@"artist_id"];
+            if([artist_id isEqualToString:self.typeId]){
+                countMusic++;
+            }
+        }
+    } else if([self.musicType isEqualToString:@"album"]){
+        countMusic = 0;
+        for(int i = 0; i < self.musicArray.count; i++){
+            NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[i]];
+            NSString *album_id = [dir objectForKey:@"album_id"];
+            if([album_id isEqualToString:self.typeId]){
+                countMusic++;
+            }
+        }
+    }
     self.currentPlayTime = 0;
     if (self.selectedSegmentIndex == 0) { //顺序播放
-        if (self.index >= self.musicArray.count - 1) {
+        if (self.index >= countMusic - 1) {
             self.index = 0;
         } else {
             self.index++;
         }
     } else  if (self.selectedSegmentIndex == 1){ //随机播放
-        NSInteger index = arc4random() % self.musicArray.count;
+        NSInteger index = arc4random() % countMusic;
         self.index = index;
     }
     [self getCurrentSongId];
@@ -243,12 +299,38 @@
 }
 
 - (void) getCurrentSongId{
+    int countTypes=0;
     for(int i = 0; i < self.musicArray.count; i++){
         NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[i]];
-        if(self.index == i){
-            self.songPId = [dir objectForKey:@"id"];
-            break;
+        NSString *songTypeId = [dir objectForKey:@""];
+        if([self.musicType isEqualToString:@"song"]){
+            if(self.index == i){
+                self.songPId = [dir objectForKey:@"id"];
+                break;
+            }
         }
+        else if ([self.musicType isEqualToString:@"art"]){
+            NSString *artist_id = [dir objectForKey:@"artist_id"];
+            if([artist_id isEqualToString:self.typeId]){
+                if(self.index == countTypes){
+                    NSLog(@"%@",[dir objectForKey:@"displayName"]);
+                    self.songPId = [dir objectForKey:@"id"];
+                    break;
+                }
+                countTypes++;
+            }         }
+        else if ([self.musicType isEqualToString:@"album"]){
+            NSString *album_id = [dir objectForKey:@"album_id"];
+            if([album_id isEqualToString:self.typeId]){
+                if(self.index == countTypes){
+                    NSLog(@"%@",[dir objectForKey:@"displayName"]);
+                    self.songPId = [dir objectForKey:@"id"];
+                    break;
+                }
+                countTypes++;
+            } 
+        }
+
      }
 }
 
@@ -385,19 +467,22 @@
 
 // 下一曲
 -(void)nextSong:(CDVInvokedUrlCommand *)command{
-    NSLog(@"下一曲..");
-    [self.commandDelegate runInBackground:^{
+     [self.commandDelegate runInBackground:^{
         callbackId_all = command.callbackId;
         CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
         [result setKeepCallback:[NSNumber numberWithBool:YES]];
         [self.commandDelegate sendPluginResult:result callbackId:callbackId_all];
     }];
+    self.musicType = [command.arguments objectAtIndex:0];
+    self.typeId = [command.arguments objectAtIndex:1];
     [self nextMusicClick];
 }
 
 // 上一曲
 -(void)prevSong:(CDVInvokedUrlCommand *)command{
-    NSLog(@"上一曲..");
+    //NSLog(@"上一曲..");
+    self.musicType = [command.arguments objectAtIndex:0];
+    self.typeId = [command.arguments objectAtIndex:1];
     [self.commandDelegate runInBackground:^{
         callbackId_all = command.callbackId;
         CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
