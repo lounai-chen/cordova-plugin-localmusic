@@ -80,7 +80,7 @@ public class LocalMusic extends CordovaPlugin {
     }
 
     if("getMusicList".equals(action)) {
-      JSONArray allMusic = this.getJsonListOfSongs();
+      allMusic = this.getJsonListOfSongs();
       callbackContext.success(allMusic);
     } else if("getAlbums".equals(action)){
       JSONArray allAlbums = this.getJsonListOfAlbums();
@@ -95,7 +95,10 @@ public class LocalMusic extends CordovaPlugin {
       isPlaying =  args.getString(1);
       musicType =  args.getString(2);
       typeId =  args.getString(3);
-      Log.e(null,"第几首歌："+songId+" 播放暂停："+isPlaying);
+      //Log.e(null,"第几首歌："+songId+" 播放暂停："+isPlaying);
+      if(allMusic.length()==0){
+        allMusic = this.getJsonListOfSongs();
+      }
       playMusic(false);
     }
     //上一曲
