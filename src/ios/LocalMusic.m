@@ -424,9 +424,14 @@
     self.isPlaying = [command.arguments objectAtIndex:1];  // 当前需要的播放状态。1播放，0暂停
     self.musicType = [command.arguments objectAtIndex:2];
     self.typeId = [command.arguments objectAtIndex:3];
-    if(![sid isEqualToString:self.songPId] || self.songPId == nil || self.songPId == NULL){ //和前面播放的歌曲ID不一样，暂停
+//    if(![sid isEqualToString:self.songPId] || self.songPId == nil || self.songPId == NULL){ //和前面播放的歌曲ID不一样，暂停
+//        self.currentPlayTime = 0;
+//        self.isPlaying = @"1";
+//        [self.player pause];
+//    }
+    if(![self.isPlaying isEqualToString:@"0"]){
         self.currentPlayTime = 0;
-        self.isPlaying = @"1";
+        //self.isPlaying = @"1";
         [self.player pause];
     }
     self.songPId = [command.arguments objectAtIndex:0];
