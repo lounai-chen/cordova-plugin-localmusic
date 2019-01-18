@@ -431,6 +431,9 @@
     }
     self.songPId = [command.arguments objectAtIndex:0];
     Boolean isHave = NO;
+    if(self.musicArray.count==0){
+        [self initMusicAllList];
+    }
     for(int i = 0; i < self.musicArray.count; i++){
         NSDictionary *dir = [NSDictionary dictionaryWithDictionary:self.musicArray[i]];
         if([self.songPId isEqualToString:[dir objectForKey:@"id"]]){
@@ -528,7 +531,13 @@
 
 -(void)getMusicList:(CDVInvokedUrlCommand *)command{
     NSLog(@"开始获取...");
-    
+    [self initMusicAllList];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:[self.musicArray copy]];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+// 加载所有歌曲列表
+- (void)initMusicAllList{
     // 开启后台播放
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setCategory:AVAudioSessionCategoryPlayback error:nil];
@@ -553,10 +562,10 @@
         NSString *lyrics = [NSString stringWithFormat:@"%@ ",[song valueForProperty: MPMediaItemPropertyLyrics]];
         //调用 absoluteString 转换为字符串
         NSString *url = [[song valueForProperty: MPMediaItemPropertyAssetURL] absoluteString];
- 
+        
         //NSString *dataUrl = [[self convertToMp3:song] absoluteString]; //考虑到一次全部export过来，手机内存不够，故注释
         //NSString *dataUrl = nil;
-      
+        
         [songDictionary setObject:songId forKey:@"id"];
         [songDictionary setObject:albumId forKey:@"album_id"];
         [songDictionary setObject:artistId forKey:@"artist_id"];
@@ -570,12 +579,9 @@
         [self.musicArray addObject: songDictionary];
         [allSongs addObject:songDictionary];
     }
- 
     
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:[allSongs copy]];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     
-   
+    
 }
 
 - (NSURL *) convertToMp3: (NSString*)ToSongId{
