@@ -413,18 +413,18 @@
     [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
     [self.viewController becomeFirstResponder];
 
-    // 获取传来的参数
     [self.commandDelegate runInBackground:^{
         callbackId_all = command.callbackId;
         CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
         [result setKeepCallback:[NSNumber numberWithBool:YES]];
         [self.commandDelegate sendPluginResult:result callbackId:callbackId_all];
     }];
+    // 获取传来的参数
     NSString *sid = [command.arguments objectAtIndex:0];
     self.isPlaying = [command.arguments objectAtIndex:1];  // 当前需要的播放状态。1播放，0暂停
     self.musicType = [command.arguments objectAtIndex:2];
     self.typeId = [command.arguments objectAtIndex:3];
-    if(![sid isEqualToString:self.songPId] && self.songPId){
+    if(![sid isEqualToString:self.songPId] || self.songPId == nil || self.songPId == NULL){ //和前面播放的歌曲ID不一样，暂停
         self.currentPlayTime = 0;
         self.isPlaying = @"1";
         [self.player pause];
