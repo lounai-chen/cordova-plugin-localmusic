@@ -430,7 +430,7 @@
 //        [self.player pause];
 //    }
     if(![self.isPlaying isEqualToString:@"0"]){
-        self.currentPlayTime = 0;
+        self.currentPlayTime = self.player.currentTime;
         //self.isPlaying = @"1";
         [self.player pause];
     }
