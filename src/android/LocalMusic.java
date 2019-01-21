@@ -125,7 +125,7 @@ public class LocalMusic extends CordovaPlugin {
     else if("speedOrBack".equals(action)){
        Log.e(null,args.getString(0));
       //mMediaPlayer.pause();
-      mMediaPlayer.seekTo(Integer.parseInt(args.getString(0)),SEEK_CLOSEST); //SEEK_CLOSEST
+      mMediaPlayer.seekTo(Integer.parseInt(args.getString(0))); //SEEK_CLOSEST
       //mMediaPlayer.start();
     }
     // 开启媒体按键监听 android
