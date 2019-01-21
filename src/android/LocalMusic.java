@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -57,6 +58,8 @@ public class LocalMusic extends CordovaPlugin {
   public static Uri ALL_SONGS_URI = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
   public static Uri ALBUMS_URI = android.provider.MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI;
   public static Uri ARTISTS_URI = android.provider.MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI;
+  //获取焦点
+  // AudioManager mAudioManager = (AudioManager) cordova.getContext().getSystemService(Context.AUDIO_SERVICE);
 
   final MediaPlayer mMediaPlayer = new MediaPlayer();
   private ArrayList<String> musicList;
@@ -67,11 +70,14 @@ public class LocalMusic extends CordovaPlugin {
   private String typeId;      //  musicType ！= song 。 typeid 表示的是artid, albumid
   private int selectedSegmentIndex=0; //  0 顺序播放  1 随机  2 单曲循环
   private int songIndex;
+  public static int musicPosition;
   JSONArray allMusic = new JSONArray();
   private MediaSessionCompat mMediaSession;
   private CallbackContext BleButtonCallbackContext = null;
   public static final int SEEK_CLOSEST   = 0x03;
   public boolean execute(String action, JSONArray args,CallbackContext callbackContext) throws JSONException {
+    //mAudioManager.requestAudioFocus(mAudioFocusChange, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+    //requestFocus();
     //判断权限够不够，不够就给
     if (ContextCompat.checkSelfPermission(cordova.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
       ActivityCompat.requestPermissions(cordova.getActivity(), new String[]{
@@ -80,12 +86,15 @@ public class LocalMusic extends CordovaPlugin {
     }
 
     if("getMusicList".equals(action)) {
+      musicPosition=0;
       allMusic = this.getJsonListOfSongs();
       callbackContext.success(allMusic);
     } else if("getAlbums".equals(action)){
+      musicPosition=0;
       JSONArray allAlbums = this.getJsonListOfAlbums();
       callbackContext.success(allAlbums);
     } else if("getArtists".equals(action)){
+      musicPosition=0;
       JSONArray allAlbums = this.getJsonListOfArtists();
       callbackContext.success(allAlbums);
     }
@@ -99,11 +108,19 @@ public class LocalMusic extends CordovaPlugin {
       if(allMusic.length()==0){
         allMusic = this.getJsonListOfSongs();
       }
-      playMusic(false);
+
+      //开始播放
+      if (isPlaying.equals("1") && musicPosition!=0){
+        mMediaPlayer.start();
+      } else {
+        playMusic(false);
+      }
+
     }
     //上一曲
     else if("prevSong".equals(action)){
       isPlaying = "1";
+      musicPosition=0;
       musicType =  args.getString(0);
       typeId =  args.getString(1);
       preciousMusic();
@@ -112,6 +129,7 @@ public class LocalMusic extends CordovaPlugin {
     //下一曲
     else if("nextSong".equals(action)){
       isPlaying = "1";
+      musicPosition=0;
       musicType =  args.getString(0);
       typeId =  args.getString(1);
       nextMusic(false);
@@ -119,6 +137,7 @@ public class LocalMusic extends CordovaPlugin {
     }
     // 0顺序播放 1随机。2循环。
     else if("setSelectedSegmentIndexs".equals(action)){
+      musicPosition=0;
       selectedSegmentIndex = Integer.parseInt(args.getString(0));
     }
     // 快进 or 后退
@@ -182,6 +201,91 @@ public class LocalMusic extends CordovaPlugin {
     }
     return true;
   }
+
+//  private AudioManager.OnAudioFocusChangeListener mAudioFocusChange = new AudioManager.OnAudioFocusChangeListener() {
+//    @Override
+//    public void onAudioFocusChange(int focusChange) {
+//      switch (focusChange){
+//        case AudioManager.AUDIOFOCUS_LOSS:
+//          //长时间丢失焦点,当其他应用申请的焦点为AUDIOFOCUS_GAIN时，
+//          //会触发此回调事件，例如播放QQ音乐，网易云音乐等
+//          //通常需要暂停音乐播放，若没有暂停播放就会出现和其他音乐同时输出声音
+//          Log.d(null, "AUDIOFOCUS_LOSS");
+//          //stop();
+//          //释放焦点，该方法可根据需要来决定是否调用
+//          //若焦点释放掉之后，将不会再自动获得
+//          mAudioManager.abandonAudioFocus(mAudioFocusChange);
+//          break;
+//        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+//          //短暂性丢失焦点，当其他应用申请AUDIOFOCUS_GAIN_TRANSIENT或AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE时，
+//          //会触发此回调事件，例如播放短视频，拨打电话等。
+//          //通常需要暂停音乐播放
+//          //stop();
+//          Log.d(null, "AUDIOFOCUS_LOSS_TRANSIENT");
+//          break;
+//        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+//          //短暂性丢失焦点并作降音处理
+//          Log.d(null, "AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK");
+//          break;
+//        case AudioManager.AUDIOFOCUS_GAIN:
+//          //当其他应用申请焦点之后又释放焦点会触发此回调
+//          //可重新播放音乐
+//          Log.d(null, "AUDIOFOCUS_GAIN");
+//          //start();
+//          break;
+//      }
+//    }
+//  };
+
+//  private AudioManager.OnAudioFocusChangeListener mAudioFocusChange = new AudioManager.OnAudioFocusChangeListener() {
+//    @Override
+//    public void onAudioFocusChange(int focusChange) {
+//      switch (focusChange) {
+//        case AudioManager.AUDIOFOCUS_LOSS:
+//          //此状态表示，焦点被其他应用获取 AUDIOFOCUS_GAIN 时，触发此回调，需要暂停播放。
+////          LogManager.d("AUDIOFOCUS_LOSS");
+////          stopPlay();
+//          break;
+//        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+//          //短暂性丢失焦点，如播放视频，打电话等，需要暂停播放
+////          stopPlay();
+////          LogManager.d("AUDIOFOCUS_LOSS_TRANSIENT");
+//          break;
+//        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+//          //短暂性丢失焦点并作降音处理，看需求处理而定。
+////          LogManager.d("AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK");
+//          break;
+//        case AudioManager.AUDIOFOCUS_GAIN:
+//          //别的应用申请焦点之后又释放焦点时，就会触发此回调，恢复播放音乐
+////          LogManager.d("AUDIOFOCUS_GAIN");
+////          startPlay();
+//          break;
+//      }
+//    }
+//  };
+
+//  ///获取焦点
+//  public boolean requestFocus() {
+//    if (mAudioFocusChange != null) {
+//      return AudioManager.AUDIOFOCUS_REQUEST_GRANTED ==
+//              mAudioManager.requestAudioFocus(mAudioFocusChange,
+//                      AudioManager.STREAM_MUSIC,
+//                      AudioManager.AUDIOFOCUS_GAIN);
+//    }
+//    return false;
+//  }
+//
+//  ///释放焦点
+//  public boolean abandonFocus() {
+//    if (mAudioFocusChange != null) {
+//      return AudioManager.AUDIOFOCUS_REQUEST_GRANTED ==
+//              mAudioManager.abandonAudioFocus(mAudioFocusChange);
+//    }
+//    return false;
+//  }
+
+
+
   private void sendUpdate(String message, boolean keepCallback) {
     if (this.BleButtonCallbackContext != null) {
       PluginResult result = new PluginResult(PluginResult.Status.OK, message);
@@ -345,13 +449,19 @@ public class LocalMusic extends CordovaPlugin {
       Log.e(null,"开始播放");
       mMediaPlayer.reset();
       iniMediaPlayerFile(songId);
-      mMediaPlayer.start();
+      if(musicPosition!=0){
+        mMediaPlayer.seekTo(musicPosition);
+      }
+      else {
+        mMediaPlayer.start();
+      }
       isPlaying = "0";
     }
     // 暂停播放
     else {
-      Log.e(null,"暂停");
       mMediaPlayer.pause();
+      musicPosition = mMediaPlayer.getCurrentPosition();
+      Log.e(null,"暂停"+musicPosition);
       isPlaying = "1";
     }
 
@@ -545,7 +655,6 @@ public class LocalMusic extends CordovaPlugin {
       playMusic(false);
     }
   }
-
 
   /**
    * 关闭播放器
