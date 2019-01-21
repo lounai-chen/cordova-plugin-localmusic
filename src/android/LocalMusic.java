@@ -471,6 +471,7 @@ public class LocalMusic extends CordovaPlugin {
       public void onCompletion(MediaPlayer mediaPlayer) {
         Log.e(null,"播放结束，自动下一曲");
         isPlaying = "1";
+        musicPosition = 0;
         nextMusic(true);
       }
     });
