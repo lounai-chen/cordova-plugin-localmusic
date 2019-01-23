@@ -7,7 +7,7 @@
 #import <MediaPlayer/MPRemoteCommand.h>
 
 @interface LocalMusic : CDVPlugin<AVAudioPlayerDelegate,AVAudioPlayerDelegate,UITableViewDelegate, UIAlertViewDelegate> {
-     NSString *callbackId_all;
+    NSString *callbackId_all;
 }
 
 @property (nonatomic, retain) MPMusicPlayerController *musicPlayer;
@@ -89,45 +89,45 @@
                 break;
             }
         }
-       
+        
         //NSLog(@".........---路径：%@",soundUrl);
         if(!soundUrl){
             return NO;
         }
         self.player = [[AVAudioPlayer alloc] initWithContentsOfURL:soundUrl error:&error];
-    
-    //设置代理
-    self.player.delegate = self;
-    //打印错误信息
-    if (error) {
-        NSLog(@"%@",error);
-    }
-    //创建一个计时器,用于记录播放进度--在计时器方法里把currentTime赋值给slider的value
-    self.timer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(sliderDisplay) userInfo:nil repeats:YES];
-    //设置slider的最大值
-    self.progressSlider.maximumValue = self.player.duration;
-     
-    //播放进度监听
-//    if(self.playerTimer){
-//        [self.playerTimer invalidate];
-//    }
-//    self.playerTimer =  [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(handleActionTime:) userInfo:_playerItem repeats:YES];
-    
-    //锁屏信息
-    MPNowPlayingInfoCenter *infoCenter = [MPNowPlayingInfoCenter defaultCenter];
-    //MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc] initWithImage:[UIImage imageNamed:@"openword_bg"]];
-    NSString *artistName = [dir objectForKey:@"artistName"];
- 
-    if(!artistName || [artistName isEqualToString:@"(null) "]){
-        artistName = @"";
-    }
- 
+        
+        //设置代理
+        self.player.delegate = self;
+        //打印错误信息
+        if (error) {
+            NSLog(@"%@",error);
+        }
+        //创建一个计时器,用于记录播放进度--在计时器方法里把currentTime赋值给slider的value
+        self.timer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(sliderDisplay) userInfo:nil repeats:YES];
+        //设置slider的最大值
+        self.progressSlider.maximumValue = self.player.duration;
+        
+        //播放进度监听
+        //    if(self.playerTimer){
+        //        [self.playerTimer invalidate];
+        //    }
+        //    self.playerTimer =  [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(handleActionTime:) userInfo:_playerItem repeats:YES];
+        
+        //锁屏信息
+        MPNowPlayingInfoCenter *infoCenter = [MPNowPlayingInfoCenter defaultCenter];
+        //MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc] initWithImage:[UIImage imageNamed:@"openword_bg"]];
+        NSString *artistName = [dir objectForKey:@"artistName"];
+        
+        if(!artistName || [artistName isEqualToString:@"(null) "]){
+            artistName = @"";
+        }
+        
         Class playingInfoCenter = NSClassFromString(@"MPNowPlayingInfoCenter");
         
         if (playingInfoCenter) {
             NSMutableDictionary *songInfo = [[NSMutableDictionary alloc] init];
             //UIImage *image = [UIImage imageNamed:@"image"];
-           // MPMediaItemArtwork *albumArt = [[MPMediaItemArtwork alloc] initWithImage:image];
+            // MPMediaItemArtwork *albumArt = [[MPMediaItemArtwork alloc] initWithImage:image];
             //歌曲名称
             [songInfo setObject:[dir objectForKey:@"displayName"] forKey:MPMediaItemPropertyTitle];
             //演唱者
@@ -144,7 +144,7 @@
             [songInfo setObject:[NSNumber numberWithDouble:self.player.duration] forKey:MPMediaItemPropertyPlaybackDuration];
             //音乐当前播放时间 在计时器中修改
             [songInfo setObject:[NSNumber numberWithDouble: self.player.currentTime] forKey:MPNowPlayingInfoPropertyElapsedPlaybackTime];
-             //        设置锁屏状态下屏幕显示音乐信息
+            //        设置锁屏状态下屏幕显示音乐信息
             [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:songInfo];
         }
     }
@@ -219,7 +219,7 @@
 }
 //上一曲
 - (void)lastMusicClick {
-   // NSLog(@"%d",self.index);
+    // NSLog(@"%d",self.index);
     int countMusic = self.musicArray.count;
     if([self.musicType isEqualToString:@"art"]){
         countMusic = 0;
@@ -259,7 +259,7 @@
 
 //下一曲
 - (void)nextMusicClick {
-     //NSLog(@"%d",self.index);
+    //NSLog(@"%d",self.index);
     int countMusic = self.musicArray.count;
     if([self.musicType isEqualToString:@"art"]){
         countMusic = 0;
@@ -327,15 +327,15 @@
                     break;
                 }
                 countTypes++;
-            } 
+            }
         }
-
-     }
+        
+    }
 }
 
 #pragma mark - 播放结束调用的方法
 - (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
-   // NSLog(@"播放结束、自动下一曲");
+    // NSLog(@"播放结束、自动下一曲");
     [self nextMusicClick];
     
     // 音频播放完成时，调用该方法。
@@ -400,10 +400,10 @@
     [commandCenter.pauseCommand addTarget:self action:@selector(startClick)];
     [commandCenter.previousTrackCommand addTarget:self action:@selector(lastMusicClick)];
     [commandCenter.nextTrackCommand addTarget:self action:@selector(nextMusicClick)];
-
+    
     // 启用耳机的播放/暂停命令 (耳机上的播放按钮触发的命令)
     commandCenter.togglePlayPauseCommand.enabled = YES;
-   
+    
 }
 
 // 播放 暂停
@@ -412,7 +412,7 @@
     //[需要 AVAudioPlayer 方式播放才能监听到，而此方式播放的音乐是APP系统的资源文件，并不是手机上Itues的音乐文件]
     [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
     [self.viewController becomeFirstResponder];
-
+    
     [self.commandDelegate runInBackground:^{
         callbackId_all = command.callbackId;
         CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
@@ -424,15 +424,16 @@
     self.isPlaying = [command.arguments objectAtIndex:1];  // 当前需要的播放状态。1播放，0暂停
     self.musicType = [command.arguments objectAtIndex:2];
     self.typeId = [command.arguments objectAtIndex:3];
-//    if(![sid isEqualToString:self.songPId] || self.songPId == nil || self.songPId == NULL){ //和前面播放的歌曲ID不一样，暂停
-//        self.currentPlayTime = 0;
-//        self.isPlaying = @"1";
-//        [self.player pause];
-//    }
+    //    if(![sid isEqualToString:self.songPId] || self.songPId == nil || self.songPId == NULL){ //和前面播放的歌曲ID不一样，暂停
+    //        self.currentPlayTime = 0;
+    //        self.isPlaying = @"1";
+    //        [self.player pause];
+    //    }
     if(![self.isPlaying isEqualToString:@"0"]){
         self.currentPlayTime = self.player.currentTime;
         //self.isPlaying = @"1";
         [self.player pause];
+        NSLog(@"%f",self.currentPlayTime );
     }
     self.songPId = [command.arguments objectAtIndex:0];
     Boolean isHave = NO;
@@ -483,7 +484,7 @@
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@":队列中未找到歌曲"];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }
-
+    
     
     [self startClick];
     [self checkConvertToMp3];
@@ -491,9 +492,9 @@
 
 // //0顺序播放 1随机。2循环。
 -(void)setSelectedSegmentIndexs:(CDVInvokedUrlCommand *)command{
-  // 获取传来的参数
-  self.selectedSegmentIndex  = [[command.arguments objectAtIndex:0] intValue];
-  // NSLog(@"%d",self.selectedSegmentIndex);
+    // 获取传来的参数
+    self.selectedSegmentIndex  = [[command.arguments objectAtIndex:0] intValue];
+    // NSLog(@"%d",self.selectedSegmentIndex);
 }
 
 // 快进 or 后退
@@ -501,14 +502,14 @@
     NSLog(@"快进 or 后退.");
     [self.player pause];
     double music_times = [[command.arguments objectAtIndex:0] doubleValue];
-    self.player.currentTime = music_times;
+    self.player.currentTime = music_times / 1000;
     NSLog(@"%f",music_times);
     [self.player play];
 }
 
 // 下一曲
 -(void)nextSong:(CDVInvokedUrlCommand *)command{
-     [self.commandDelegate runInBackground:^{
+    [self.commandDelegate runInBackground:^{
         callbackId_all = command.callbackId;
         CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
         [result setKeepCallback:[NSNumber numberWithBool:YES]];
@@ -530,7 +531,7 @@
         [result setKeepCallback:[NSNumber numberWithBool:YES]];
         [self.commandDelegate sendPluginResult:result callbackId:callbackId_all];
     }];
-
+    
     [self lastMusicClick];
 }
 
@@ -600,93 +601,93 @@
         NSString *songId = [NSString stringWithFormat:@"%@",[song valueForProperty:MPMediaEntityPropertyPersistentID]];
         if([songId isEqualToString:ToSongId]){
             
-                NSURL *url = [song valueForProperty:MPMediaItemPropertyAssetURL];
-                AVURLAsset *songAsset = [AVURLAsset URLAssetWithURL:url options:nil];
-                NSFileManager *fileManager = [NSFileManager defaultManager];
-                NSArray *dirs = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask,YES); // 去存放沙盒里面的音乐
-                NSString *documentsDirectoryPath = [dirs objectAtIndex:0];
-                //NSLog(@"compatible presets for songAsset: %@",[AVAssetExportSession exportPresetsCompatibleWithAsset:songAsset]);
-                NSArray *ar = [AVAssetExportSession exportPresetsCompatibleWithAsset: songAsset];
-                //NSLog(@"%@", ar);
-                AVAssetExportSession *exporter = [[AVAssetExportSession alloc] initWithAsset: songAsset presetName:AVAssetExportPresetAppleM4A];
-                //NSLog(@"created exporter. supportedFileTypes: %@", exporter.supportedFileTypes);
-                exporter.outputFileType=@"com.apple.m4a-audio";
+            NSURL *url = [song valueForProperty:MPMediaItemPropertyAssetURL];
+            AVURLAsset *songAsset = [AVURLAsset URLAssetWithURL:url options:nil];
+            NSFileManager *fileManager = [NSFileManager defaultManager];
+            NSArray *dirs = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask,YES); // 去存放沙盒里面的音乐
+            NSString *documentsDirectoryPath = [dirs objectAtIndex:0];
+            //NSLog(@"compatible presets for songAsset: %@",[AVAssetExportSession exportPresetsCompatibleWithAsset:songAsset]);
+            NSArray *ar = [AVAssetExportSession exportPresetsCompatibleWithAsset: songAsset];
+            //NSLog(@"%@", ar);
+            AVAssetExportSession *exporter = [[AVAssetExportSession alloc] initWithAsset: songAsset presetName:AVAssetExportPresetAppleM4A];
+            //NSLog(@"created exporter. supportedFileTypes: %@", exporter.supportedFileTypes);
+            exporter.outputFileType=@"com.apple.m4a-audio";
             
-                NSString *exportFile = [documentsDirectoryPath stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.m4a",[song valueForProperty:MPMediaEntityPropertyPersistentID]]];
-                NSURL *urlPath = [NSURL fileURLWithPath:exportFile];
-                exporter.outputURL=urlPath;
+            NSString *exportFile = [documentsDirectoryPath stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.m4a",[song valueForProperty:MPMediaEntityPropertyPersistentID]]];
+            NSURL *urlPath = [NSURL fileURLWithPath:exportFile];
+            exporter.outputURL=urlPath;
             
-                NSLog(@"---------%@",urlPath);
+            NSLog(@"---------%@",urlPath);
             
-                // 取得沙盒目录
-                NSString *localPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
-                // 要检查的文件目录
-                NSString *toFileName = [NSString stringWithFormat:@"%@%@",ToSongId,@".m4a"];
+            // 取得沙盒目录
+            NSString *localPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+            // 要检查的文件目录
+            NSString *toFileName = [NSString stringWithFormat:@"%@%@",ToSongId,@".m4a"];
             
-                NSString *filePath = [localPath  stringByAppendingPathComponent:toFileName];
-                NSFileManager *fileManagerCom = [NSFileManager defaultManager];
-                if ([fileManagerCom fileExistsAtPath:filePath]) {
-                    NSLog(@"文件存在:%@",filePath);
-                }
-                else {
-                    NSLog(@"文件不存在:%@",filePath);
-                    self.songPId = ToSongId;
-                        [exporter exportAsynchronouslyWithCompletionHandler:^{
-                            NSData *data1 = [NSData dataWithContentsOfFile:exportFile];
-                            //NSLog(@"==================data1:%@",data1);
-                            int exportStatus = exporter.status;
-                            switch(exportStatus)
-                            {
-                                case AVAssetExportSessionStatusFailed: {
-                                // log error to text view
-        
-                                    NSError *exportError = exporter.error;
-                                    NSLog(@"AVAssetExportSessionStatusFailed: %@", exportError);
-                                    break;
-                                }
-        
-                                case AVAssetExportSessionStatusCompleted: {
-                                    NSLog(@"AVAssetExportSessionStatusCompleted");
-                                    //export完成后，重新调用播放
-                                    self.isPlaying = @"1";
-                                    [self startClick];
-                                    break;
-                                }
-        
-                                case AVAssetExportSessionStatusUnknown:
-                                {
-                                    NSLog(@"AVAssetExportSessionStatusUnknown");
-                                    break;
-        
-                                }
-        
-                                case AVAssetExportSessionStatusExporting:
-                                {
-                                    NSLog(@"AVAssetExportSessionStatusExporting");
-                                    break;
-        
-                                }
-        
-                                caseAVAssetExportSessionStatusCancelled:
-                                {
-                                    NSLog(@"AVAssetExportSessionStatusCancelled");
-                                    break;
-                                }
-        
-                                case AVAssetExportSessionStatusWaiting:
-                                {
-                                    NSLog(@"AVAssetExportSessionStatusWaiting");
-                                    break;
-                                }
-        
-                                default:
-                                {NSLog(@"didn't get export status");break;}
-        
-                            }
-        
+            NSString *filePath = [localPath  stringByAppendingPathComponent:toFileName];
+            NSFileManager *fileManagerCom = [NSFileManager defaultManager];
+            if ([fileManagerCom fileExistsAtPath:filePath]) {
+                NSLog(@"文件存在:%@",filePath);
+            }
+            else {
+                NSLog(@"文件不存在:%@",filePath);
+                self.songPId = ToSongId;
+                [exporter exportAsynchronouslyWithCompletionHandler:^{
+                    NSData *data1 = [NSData dataWithContentsOfFile:exportFile];
+                    //NSLog(@"==================data1:%@",data1);
+                    int exportStatus = exporter.status;
+                    switch(exportStatus)
+                    {
+                        case AVAssetExportSessionStatusFailed: {
+                            // log error to text view
+                            
+                            NSError *exportError = exporter.error;
+                            NSLog(@"AVAssetExportSessionStatusFailed: %@", exportError);
+                            break;
                         }
-                    ];
+                            
+                        case AVAssetExportSessionStatusCompleted: {
+                            NSLog(@"AVAssetExportSessionStatusCompleted");
+                            //export完成后，重新调用播放
+                            self.isPlaying = @"1";
+                            [self startClick];
+                            break;
+                        }
+                            
+                        case AVAssetExportSessionStatusUnknown:
+                        {
+                            NSLog(@"AVAssetExportSessionStatusUnknown");
+                            break;
+                            
+                        }
+                            
+                        case AVAssetExportSessionStatusExporting:
+                        {
+                            NSLog(@"AVAssetExportSessionStatusExporting");
+                            break;
+                            
+                        }
+                            
+                        caseAVAssetExportSessionStatusCancelled:
+                        {
+                            NSLog(@"AVAssetExportSessionStatusCancelled");
+                            break;
+                        }
+                            
+                        case AVAssetExportSessionStatusWaiting:
+                        {
+                            NSLog(@"AVAssetExportSessionStatusWaiting");
+                            break;
+                        }
+                            
+                        default:
+                        {NSLog(@"didn't get export status");break;}
+                            
+                    }
+                    
                 }
+                 ];
+            }
             
             return urlPath;
             
@@ -695,7 +696,7 @@
     return  nil;
 }
 
-// 由于第一次拷贝到APP的沙盒路径里时间长，故执行一遍检查缓存    
+// 由于第一次拷贝到APP的沙盒路径里时间长，故执行一遍检查缓存
 - (void) checkConvertToMp3{
     
     MPMediaQuery *everything = [[MPMediaQuery alloc] init];
@@ -703,97 +704,97 @@
     NSMutableArray *allSongs = [[NSMutableArray alloc] init];
     for (MPMediaItem *song in itemsFromGenericQuery) {
         NSString *songId = [NSString stringWithFormat:@"%@",[song valueForProperty:MPMediaEntityPropertyPersistentID]];
-     
+        
+        
+        NSURL *url = [song valueForProperty:MPMediaItemPropertyAssetURL];
+        AVURLAsset *songAsset = [AVURLAsset URLAssetWithURL:url options:nil];
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        NSArray *dirs = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask,YES); // 去存放沙盒里面的音乐
+        NSString *documentsDirectoryPath = [dirs objectAtIndex:0];
+        //NSLog(@"compatible presets for songAsset: %@",[AVAssetExportSession exportPresetsCompatibleWithAsset:songAsset]);
+        NSArray *ar = [AVAssetExportSession exportPresetsCompatibleWithAsset: songAsset];
+        //NSLog(@"%@", ar);
+        AVAssetExportSession *exporter = [[AVAssetExportSession alloc] initWithAsset: songAsset presetName:AVAssetExportPresetAppleM4A];
+        //NSLog(@"created exporter. supportedFileTypes: %@", exporter.supportedFileTypes);
+        exporter.outputFileType=@"com.apple.m4a-audio";
+        
+        NSString *exportFile = [documentsDirectoryPath stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.m4a",[song valueForProperty:MPMediaEntityPropertyPersistentID]]];
+        NSURL *urlPath = [NSURL fileURLWithPath:exportFile];
+        exporter.outputURL=urlPath;
+        
+        NSLog(@"---------%@",urlPath);
+        
+        // 取得沙盒目录
+        NSString *localPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+        // 要检查的文件目录
+        NSString *toFileName = [NSString stringWithFormat:@"%@%@",songId,@".m4a"];
+        
+        NSString *filePath = [localPath  stringByAppendingPathComponent:toFileName];
+        NSFileManager *fileManagerCom = [NSFileManager defaultManager];
+        if ([fileManagerCom fileExistsAtPath:filePath]) {
+            NSLog(@"文件存在:%@",filePath);
+        }
+        else {
+            NSLog(@"文件不存在:%@",filePath);
             
-                NSURL *url = [song valueForProperty:MPMediaItemPropertyAssetURL];
-                AVURLAsset *songAsset = [AVURLAsset URLAssetWithURL:url options:nil];
-                NSFileManager *fileManager = [NSFileManager defaultManager];
-                NSArray *dirs = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask,YES); // 去存放沙盒里面的音乐
-                NSString *documentsDirectoryPath = [dirs objectAtIndex:0];
-                //NSLog(@"compatible presets for songAsset: %@",[AVAssetExportSession exportPresetsCompatibleWithAsset:songAsset]);
-                NSArray *ar = [AVAssetExportSession exportPresetsCompatibleWithAsset: songAsset];
-                //NSLog(@"%@", ar);
-                AVAssetExportSession *exporter = [[AVAssetExportSession alloc] initWithAsset: songAsset presetName:AVAssetExportPresetAppleM4A];
-                //NSLog(@"created exporter. supportedFileTypes: %@", exporter.supportedFileTypes);
-                exporter.outputFileType=@"com.apple.m4a-audio";
-            
-                NSString *exportFile = [documentsDirectoryPath stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.m4a",[song valueForProperty:MPMediaEntityPropertyPersistentID]]];
-                NSURL *urlPath = [NSURL fileURLWithPath:exportFile];
-                exporter.outputURL=urlPath;
-            
-                NSLog(@"---------%@",urlPath);
-            
-                // 取得沙盒目录
-                NSString *localPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
-                // 要检查的文件目录
-                NSString *toFileName = [NSString stringWithFormat:@"%@%@",songId,@".m4a"];
-            
-                NSString *filePath = [localPath  stringByAppendingPathComponent:toFileName];
-                NSFileManager *fileManagerCom = [NSFileManager defaultManager];
-                if ([fileManagerCom fileExistsAtPath:filePath]) {
-                    NSLog(@"文件存在:%@",filePath);
+            [exporter exportAsynchronouslyWithCompletionHandler:^{
+                NSData *data1 = [NSData dataWithContentsOfFile:exportFile];
+                //NSLog(@"==================data1:%@",data1);
+                int exportStatus = exporter.status;
+                switch(exportStatus)
+                {
+                    case AVAssetExportSessionStatusFailed: {
+                        // log error to text view
+                        
+                        NSError *exportError = exporter.error;
+                        NSLog(@"AVAssetExportSessionStatusFailed: %@", exportError);
+                        break;
+                    }
+                        
+                    case AVAssetExportSessionStatusCompleted: {
+                        NSLog(@"AVAssetExportSessionStatusCompleted");
+                        break;
+                    }
+                        
+                    case AVAssetExportSessionStatusUnknown:
+                    {
+                        NSLog(@"AVAssetExportSessionStatusUnknown");
+                        break;
+                        
+                    }
+                        
+                    case AVAssetExportSessionStatusExporting:
+                    {
+                        NSLog(@"AVAssetExportSessionStatusExporting");
+                        break;
+                        
+                    }
+                        
+                    caseAVAssetExportSessionStatusCancelled:
+                    {
+                        NSLog(@"AVAssetExportSessionStatusCancelled");
+                        break;
+                    }
+                        
+                    case AVAssetExportSessionStatusWaiting:
+                    {
+                        NSLog(@"AVAssetExportSessionStatusWaiting");
+                        break;
+                    }
+                        
+                    default:
+                    {NSLog(@"didn't get export status");break;}
+                        
                 }
-                else {
-                    NSLog(@"文件不存在:%@",filePath);
-                    
-                        [exporter exportAsynchronouslyWithCompletionHandler:^{
-                            NSData *data1 = [NSData dataWithContentsOfFile:exportFile];
-                            //NSLog(@"==================data1:%@",data1);
-                            int exportStatus = exporter.status;
-                            switch(exportStatus)
-                            {
-                                case AVAssetExportSessionStatusFailed: {
-                                // log error to text view
+                
+            }
+             ];
+        }
         
-                                    NSError *exportError = exporter.error;
-                                    NSLog(@"AVAssetExportSessionStatusFailed: %@", exportError);
-                                    break;
-                                }
-        
-                                case AVAssetExportSessionStatusCompleted: {
-                                    NSLog(@"AVAssetExportSessionStatusCompleted"); 
-                                    break;
-                                }
-        
-                                case AVAssetExportSessionStatusUnknown:
-                                {
-                                    NSLog(@"AVAssetExportSessionStatusUnknown");
-                                    break;
-        
-                                }
-        
-                                case AVAssetExportSessionStatusExporting:
-                                {
-                                    NSLog(@"AVAssetExportSessionStatusExporting");
-                                    break;
-        
-                                }
-        
-                                caseAVAssetExportSessionStatusCancelled:
-                                {
-                                    NSLog(@"AVAssetExportSessionStatusCancelled");
-                                    break;
-                                }
-        
-                                case AVAssetExportSessionStatusWaiting:
-                                {
-                                    NSLog(@"AVAssetExportSessionStatusWaiting");
-                                    break;
-                                }
-        
-                                default:
-                                {NSLog(@"didn't get export status");break;}
-        
-                            }
-        
-                        }
-                    ];
-                }
- 
     }
-   
+    
 }
- 
+
 
 -(void)getAlbums:(CDVInvokedUrlCommand *)command{
     NSMutableArray *allAlbums = [[NSMutableArray alloc] init];
@@ -839,3 +840,4 @@
 
 
 @end
+
