@@ -486,6 +486,7 @@
 
     
     [self startClick];
+    [self checkConvertToMp3];
 }
 
 // //0顺序播放 1随机。2循环。
@@ -539,6 +540,7 @@
     [self initMusicAllList];
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:[self.musicArray copy]];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    [self checkConvertToMp3];
 }
 
 // 加载所有歌曲列表
@@ -692,7 +694,105 @@
     }
     return  nil;
 }
+
+// 由于第一次拷贝到APP的沙盒路径里时间长，故执行一遍检查缓存    
+- (void) checkConvertToMp3{
     
+    MPMediaQuery *everything = [[MPMediaQuery alloc] init];
+    NSArray *itemsFromGenericQuery = [everything items];
+    NSMutableArray *allSongs = [[NSMutableArray alloc] init];
+    for (MPMediaItem *song in itemsFromGenericQuery) {
+        NSString *songId = [NSString stringWithFormat:@"%@",[song valueForProperty:MPMediaEntityPropertyPersistentID]];
+     
+            
+                NSURL *url = [song valueForProperty:MPMediaItemPropertyAssetURL];
+                AVURLAsset *songAsset = [AVURLAsset URLAssetWithURL:url options:nil];
+                NSFileManager *fileManager = [NSFileManager defaultManager];
+                NSArray *dirs = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask,YES); // 去存放沙盒里面的音乐
+                NSString *documentsDirectoryPath = [dirs objectAtIndex:0];
+                //NSLog(@"compatible presets for songAsset: %@",[AVAssetExportSession exportPresetsCompatibleWithAsset:songAsset]);
+                NSArray *ar = [AVAssetExportSession exportPresetsCompatibleWithAsset: songAsset];
+                //NSLog(@"%@", ar);
+                AVAssetExportSession *exporter = [[AVAssetExportSession alloc] initWithAsset: songAsset presetName:AVAssetExportPresetAppleM4A];
+                //NSLog(@"created exporter. supportedFileTypes: %@", exporter.supportedFileTypes);
+                exporter.outputFileType=@"com.apple.m4a-audio";
+            
+                NSString *exportFile = [documentsDirectoryPath stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.m4a",[song valueForProperty:MPMediaEntityPropertyPersistentID]]];
+                NSURL *urlPath = [NSURL fileURLWithPath:exportFile];
+                exporter.outputURL=urlPath;
+            
+                NSLog(@"---------%@",urlPath);
+            
+                // 取得沙盒目录
+                NSString *localPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+                // 要检查的文件目录
+                NSString *toFileName = [NSString stringWithFormat:@"%@%@",songId,@".m4a"];
+            
+                NSString *filePath = [localPath  stringByAppendingPathComponent:toFileName];
+                NSFileManager *fileManagerCom = [NSFileManager defaultManager];
+                if ([fileManagerCom fileExistsAtPath:filePath]) {
+                    NSLog(@"文件存在:%@",filePath);
+                }
+                else {
+                    NSLog(@"文件不存在:%@",filePath);
+                    
+                        [exporter exportAsynchronouslyWithCompletionHandler:^{
+                            NSData *data1 = [NSData dataWithContentsOfFile:exportFile];
+                            //NSLog(@"==================data1:%@",data1);
+                            int exportStatus = exporter.status;
+                            switch(exportStatus)
+                            {
+                                case AVAssetExportSessionStatusFailed: {
+                                // log error to text view
+        
+                                    NSError *exportError = exporter.error;
+                                    NSLog(@"AVAssetExportSessionStatusFailed: %@", exportError);
+                                    break;
+                                }
+        
+                                case AVAssetExportSessionStatusCompleted: {
+                                    NSLog(@"AVAssetExportSessionStatusCompleted"); 
+                                    break;
+                                }
+        
+                                case AVAssetExportSessionStatusUnknown:
+                                {
+                                    NSLog(@"AVAssetExportSessionStatusUnknown");
+                                    break;
+        
+                                }
+        
+                                case AVAssetExportSessionStatusExporting:
+                                {
+                                    NSLog(@"AVAssetExportSessionStatusExporting");
+                                    break;
+        
+                                }
+        
+                                caseAVAssetExportSessionStatusCancelled:
+                                {
+                                    NSLog(@"AVAssetExportSessionStatusCancelled");
+                                    break;
+                                }
+        
+                                case AVAssetExportSessionStatusWaiting:
+                                {
+                                    NSLog(@"AVAssetExportSessionStatusWaiting");
+                                    break;
+                                }
+        
+                                default:
+                                {NSLog(@"didn't get export status");break;}
+        
+                            }
+        
+                        }
+                    ];
+                }
+ 
+    }
+   
+}
  
 
 -(void)getAlbums:(CDVInvokedUrlCommand *)command{
