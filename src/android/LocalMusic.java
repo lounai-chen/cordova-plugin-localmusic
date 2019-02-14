@@ -23,9 +23,9 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowInsets;
 
-import com.duanqu.qupai.utils.BitmapUtil;
-import com.duntuo.SmartVoiceAPP.MainActivity;
-import com.duntuo.SmartVoiceAPP.R;
+// import com.duanqu.qupai.utils.BitmapUtil;
+// import com.duntuo.SmartVoiceAPP.MainActivity;
+// import com.duntuo.SmartVoiceAPP.R;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
